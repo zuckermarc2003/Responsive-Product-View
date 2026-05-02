@@ -369,6 +369,24 @@ const Cart: React.FC = () => {
         </main>
       </div>
 
+      {/* ── Floating checkout bar (mobile only) ─────────────────────────── */}
+      {cartChecker && (
+        <div className="cart-float-bar">
+          <div className="cart-float-bar__total">
+            <span className="cart-float-bar__label">{t('cart.total')}</span>
+            <span className="cart-float-bar__amount">
+              {cartTotalAmount.toFixed(2)} {t('product.currency')}
+            </span>
+          </div>
+          <button
+            className="cart-float-bar__btn"
+            onClick={navigateToCheckout}
+          >
+            <TbCreditCardPay size={18} /> {t('order.checkoutNow')}
+          </button>
+        </div>
+      )}
+
       {/* ── Delete confirmation modal ─────────────────────────────────────── */}
       <AnimatePresence mode="wait">
         {isDeleteModalOpen && (
