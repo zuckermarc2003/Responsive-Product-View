@@ -43,9 +43,9 @@ export default function RootLayout() {
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
-    // Load from local assets to avoid pnpm symlink resolution failures in Metro
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    Ionicons: require("../assets/fonts/Ionicons.ttf"),
+    // Load Ionicons from CDN to bypass Metro/pnpm asset-serving issues on Android
+    Ionicons:
+      "https://cdn.jsdelivr.net/npm/@expo/vector-icons@15.1.1/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf",
   });
 
   useEffect(() => {
