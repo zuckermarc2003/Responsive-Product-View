@@ -43,15 +43,11 @@ export default function HomeScreen() {
 
       {/* ── Header ── */}
       <View style={styles.header}>
-        <View style={styles.headerLogo}>
-          <View style={styles.logoBox}>
-            <Text style={styles.logoText}>FS</Text>
-          </View>
-          <View>
-            <Text style={styles.storeName}>AL-FIRDAOUS</Text>
-            <Text style={styles.storeTagline}>STORE</Text>
-          </View>
-        </View>
+        <Image
+          source={{ uri: 'https://www.alfirdaousstore.com/assets/WHITE%20FIRDAOUS%20STORE-DgnBjEdy.png' }}
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
         <View style={styles.headerActions}>
           <Pressable style={styles.headerIcon} onPress={() => router.push('/(tabs)/catalog' as any)}>
             <Ionicons name="search-outline" size={22} color="#fff" />
@@ -198,15 +194,7 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number) =>
       justifyContent: 'space-between',
     },
     headerLogo: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    logoBox: {
-      width: 36, height: 36, borderRadius: 8,
-      backgroundColor: 'rgba(255,255,255,0.2)',
-      alignItems: 'center', justifyContent: 'center',
-      borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.35)',
-    },
-    logoText: { color: '#fff', fontSize: 14, fontFamily: 'Inter_700Bold' },
-    storeName: { color: '#fff', fontSize: 14, fontFamily: 'Inter_700Bold', letterSpacing: 1.5 },
-    storeTagline: { color: 'rgba(255,255,255,0.75)', fontSize: 9, fontFamily: 'Inter_400Regular', letterSpacing: 3 },
+    logoImage: { height: 36, width: 160 },
     headerActions: { flexDirection: 'row', gap: 4 },
     headerIcon: { padding: 8, position: 'relative' },
     cartBadge: {

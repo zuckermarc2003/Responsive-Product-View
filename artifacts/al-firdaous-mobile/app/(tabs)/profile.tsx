@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
   Alert,
+  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -186,9 +187,12 @@ export default function ProfileScreen() {
         {/* ── Brand footer ── */}
         <View style={styles.brandFooter}>
           <View style={styles.brandLogoBox}>
-            <Text style={styles.brandLogoText}>FS</Text>
+            <Image
+              source={{ uri: 'https://www.alfirdaousstore.com/assets/WHITE%20FIRDAOUS%20STORE-DgnBjEdy.png' }}
+              style={styles.brandLogoImage}
+              resizeMode="contain"
+            />
           </View>
-          <Text style={styles.brandName}>AL-FIRDAOUS STORE</Text>
           <Text style={styles.brandTagline}>Qualité & Élégance depuis 2018</Text>
         </View>
 
@@ -271,16 +275,13 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottom
     },
     divider: { height: 1, backgroundColor: colors.border, marginLeft: 66 },
 
-    brandFooter: { alignItems: 'center', gap: 6, paddingVertical: 24 },
+    brandFooter: { alignItems: 'center', gap: 10, paddingVertical: 24 },
     brandLogoBox: {
-      width: 44,
-      height: 44,
-      borderRadius: 12,
       backgroundColor: colors.primary,
-      alignItems: 'center',
-      justifyContent: 'center',
+      borderRadius: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
     },
-    brandLogoText: { color: '#fff', fontSize: 16, fontFamily: 'Inter_700Bold' },
-    brandName: { fontSize: 15, fontFamily: 'Inter_700Bold', color: colors.foreground, letterSpacing: 1 },
+    brandLogoImage: { width: 160, height: 36 },
     brandTagline: { fontSize: 12, fontFamily: 'Inter_400Regular', color: colors.mutedForeground },
   });
