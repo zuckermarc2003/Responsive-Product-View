@@ -5,6 +5,7 @@ import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { SymbolView } from "expo-symbols";
 import React from "react";
 import { Platform, StyleSheet, Text, View, useColorScheme } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppIcon } from "@/components/AppIcon";
 import { useCart } from "@/context/CartContext";
@@ -70,8 +71,10 @@ function NativeTabLayout() {
 function ClassicTabLayout() {
   const colors = useColors();
   const colorScheme = useColorScheme();
+  const insets = useSafeAreaInsets();
   const isDark = colorScheme === "dark";
   const isIOS = Platform.OS === "ios";
+  const isAndroid = Platform.OS === "android";
   const isWeb = Platform.OS === "web";
 
   return (
@@ -87,6 +90,8 @@ function ClassicTabLayout() {
           borderTopColor: colors.tabBarBorder,
           elevation: 4,
           ...(isWeb ? { height: 84 } : {}),
+          // On Android, add bottom padding so the bar clears the gesture nav bar
+          ...(isAndroid && insets.bottom > 0 ? { paddingBottom: insets.bottom, height: 60 + insets.bottom } : {}),
         },
         tabBarBackground: () =>
           isIOS ? (
