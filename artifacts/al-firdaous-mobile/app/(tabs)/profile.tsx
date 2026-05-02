@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { AppIcon } from '@/components/AppIcon';
 import React, { useState } from 'react';
 import {
   Alert,
@@ -18,7 +18,7 @@ import { useWishlist } from '@/context/WishlistContext';
 import { useColors } from '@/hooks/useColors';
 
 interface SettingRowProps {
-  icon: React.ComponentProps<typeof Ionicons>['name'];
+  icon: string;
   label: string;
   value?: string;
   toggle?: boolean;
@@ -33,7 +33,7 @@ function SettingRow({ icon, label, value, toggle, toggleValue, onToggle, onPress
   return (
     <Pressable style={rowStyles.row} onPress={onPress} disabled={toggle}>
       <View style={[rowStyles.iconBox, { backgroundColor: color ? `${color}18` : colors.secondary }]}>
-        <Ionicons name={icon} size={18} color={color ?? colors.primary} />
+        <AppIcon name={icon as any} size={18} color={color ?? colors.primary} />
       </View>
       <Text style={[rowStyles.label, { color: colors.foreground }]}>{label}</Text>
       <View style={rowStyles.right}>
@@ -46,7 +46,7 @@ function SettingRow({ icon, label, value, toggle, toggleValue, onToggle, onPress
             thumbColor="#fff"
           />
         ) : (
-          !toggle && <Ionicons name="chevron-forward" size={16} color={colors.border} />
+          !toggle && <AppIcon name="chevron-forward" size={16} color={colors.border} />
         )}
       </View>
     </Pressable>
@@ -81,7 +81,7 @@ function ThemeSelector() {
             <Text style={[themeStyles.label, { color: colors.foreground }]}>{t.label}</Text>
             <Text style={[themeStyles.sub, { color: colors.mutedForeground }]}>{t.primary}</Text>
             {theme.id === t.id && (
-              <Ionicons name="checkmark-circle" size={20} color={t.primary} />
+              <AppIcon name="checkmark-circle" size={20} color={t.primary} />
             )}
           </Pressable>
         ))}
@@ -122,7 +122,7 @@ export default function ProfileScreen() {
         {/* ── Avatar / Stats ── */}
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
-            <Ionicons name="person" size={36} color={colors.primary} />
+            <AppIcon name="person" size={36} color={colors.primary} />
           </View>
           <Text style={styles.profileName}>Client AL-FIRDAOUS</Text>
           <Text style={styles.profileEmail}>Bienvenue dans notre boutique</Text>

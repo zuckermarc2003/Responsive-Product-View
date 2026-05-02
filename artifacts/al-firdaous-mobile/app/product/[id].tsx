@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { AppIcon } from '@/components/AppIcon';
 import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -82,7 +82,7 @@ export default function ProductDetailScreen() {
     return (
       <View style={[styles.container, { alignItems: 'center', justifyContent: 'center' }]}>
         <Pressable style={[styles.backBtn, { top: topPad + 8, position: 'absolute', left: 12 }]} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color={colors.foreground} />
+          <AppIcon name="arrow-back" size={22} color={colors.foreground} />
         </Pressable>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={{ marginTop: 12, color: colors.mutedForeground, fontFamily: 'Inter_400Regular' }}>
@@ -96,9 +96,9 @@ export default function ProductDetailScreen() {
     return (
       <View style={[styles.container, { alignItems: 'center', justifyContent: 'center', gap: 12 }]}>
         <Pressable style={[styles.backBtn, { top: topPad + 8, position: 'absolute', left: 12 }]} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color={colors.foreground} />
+          <AppIcon name="arrow-back" size={22} color={colors.foreground} />
         </Pressable>
-        <Ionicons name="alert-circle-outline" size={48} color={colors.border} />
+        <AppIcon name="alert-circle-outline" size={48} color={colors.border} />
         <Text style={{ fontSize: 17, fontFamily: 'Inter_700Bold', color: colors.foreground }}>Produit introuvable</Text>
         <Pressable onPress={() => router.back()}>
           <Text style={{ color: colors.primary, fontFamily: 'Inter_600SemiBold' }}>Retourner</Text>
@@ -139,12 +139,12 @@ export default function ProductDetailScreen() {
           )}
 
           <Pressable style={[styles.backBtn, { top: topPad + 8 }]} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={22} color="#fff" />
+            <AppIcon name="arrow-back" size={22} color="#fff" />
           </Pressable>
 
           <Animated.View style={[styles.wishlistBtn, { top: topPad + 8 }, heartStyle]}>
             <Pressable onPress={handleWishlist}>
-              <Ionicons
+              <AppIcon
                 name={inWishlist ? 'heart' : 'heart-outline'}
                 size={22}
                 color={inWishlist ? colors.destructive : '#fff'}
@@ -168,7 +168,7 @@ export default function ProductDetailScreen() {
               <Text style={styles.ref}>REF: {product.ref}</Text>
             </View>
             <View style={styles.ratingBox}>
-              <Ionicons name="star" size={14} color={colors.starGold} />
+              <AppIcon name="star" size={14} color={colors.starGold} />
               <Text style={styles.rating}>{product.rating}</Text>
               <Text style={styles.reviewCount}>({product.reviewCount ?? reviews.length})</Text>
             </View>
@@ -220,12 +220,12 @@ export default function ProductDetailScreen() {
           {/* Features */}
           <View style={styles.featuresRow}>
             {[
-              { icon: 'shield-checkmark-outline' as const, label: 'Qualité garantie' },
-              { icon: 'refresh-outline' as const, label: 'Retour 30j' },
-              { icon: 'car-outline' as const, label: 'Livraison gratuite' },
+              { icon: 'shield-checkmark-outline', label: 'Qualité garantie' },
+              { icon: 'refresh-outline', label: 'Retour 30j' },
+              { icon: 'car-outline', label: 'Livraison gratuite' },
             ].map(f => (
               <View key={f.label} style={styles.featureItem}>
-                <Ionicons name={f.icon} size={20} color={colors.primary} />
+                <AppIcon name={f.icon as any} size={20} color={colors.primary} />
                 <Text style={styles.featureText}>{f.label}</Text>
               </View>
             ))}
@@ -242,7 +242,7 @@ export default function ProductDetailScreen() {
                 <View>
                   <View style={styles.starsRow}>
                     {[1, 2, 3, 4, 5].map(s => (
-                      <Ionicons
+                      <AppIcon
                         key={s}
                         name={s <= Math.floor(product.rating) ? 'star' : 'star-outline'}
                         size={14}
@@ -265,7 +265,7 @@ export default function ProductDetailScreen() {
                     <Text style={styles.reviewAuthor}>{review.author}</Text>
                     <View style={styles.starsRow}>
                       {[1, 2, 3, 4, 5].map(s => (
-                        <Ionicons key={s} name={s <= review.rating ? 'star' : 'star-outline'} size={12} color={colors.starGold} />
+                        <AppIcon key={s} name={s <= review.rating ? 'star' : 'star-outline'} size={12} color={colors.starGold} />
                       ))}
                     </View>
                   </View>
@@ -305,7 +305,7 @@ export default function ProductDetailScreen() {
       <View style={[styles.cta, { paddingBottom: bottomPad + 8 }]}>
         <Animated.View style={[{ flex: 1 }, cartBtnStyle]}>
           <Pressable style={styles.cartBtn} onPress={handleAddToCart}>
-            <Ionicons name="cart-outline" size={22} color="#fff" />
+            <AppIcon name="cart-outline" size={22} color="#fff" />
             <Text style={styles.cartBtnText}>Ajouter au panier</Text>
           </Pressable>
         </Animated.View>

@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
@@ -7,6 +6,7 @@ import { SymbolView } from "expo-symbols";
 import React from "react";
 import { Platform, StyleSheet, Text, View, useColorScheme } from "react-native";
 
+import { AppIcon } from "@/components/AppIcon";
 import { useCart } from "@/context/CartContext";
 import { useColors } from "@/hooks/useColors";
 
@@ -14,7 +14,7 @@ function CartTabIcon({ color, focused }: { color: string; focused: boolean }) {
   const { itemCount } = useCart();
   return (
     <View style={{ position: "relative" }}>
-      <Ionicons name={focused ? "cart" : "cart-outline"} size={24} color={color} />
+      <AppIcon name={focused ? "cart" : "cart-outline"} size={24} color={color} />
       {itemCount > 0 && (
         <View style={badge.container}>
           <Text style={badge.text}>{itemCount > 9 ? "9+" : String(itemCount)}</Text>
@@ -81,8 +81,6 @@ function ClassicTabLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarStyle: {
-          // position: absolute only on iOS for the blur glass effect.
-          // On Android it would overlap the system nav buttons — must NOT be absolute.
           ...(isIOS ? { position: "absolute" as const } : {}),
           backgroundColor: isIOS ? "transparent" : colors.tabBar,
           borderTopWidth: 1,
@@ -111,13 +109,9 @@ function ClassicTabLayout() {
           title: "Accueil",
           tabBarIcon: ({ color, focused }) =>
             isIOS ? (
-              <SymbolView
-                name={focused ? "house.fill" : "house"}
-                tintColor={color}
-                size={24}
-              />
+              <SymbolView name={focused ? "house.fill" : "house"} tintColor={color} size={24} />
             ) : (
-              <Ionicons name={focused ? "home" : "home-outline"} size={24} color={color} />
+              <AppIcon name={focused ? "home" : "home-outline"} size={24} color={color} />
             ),
         }}
       />
@@ -127,13 +121,9 @@ function ClassicTabLayout() {
           title: "Boutique",
           tabBarIcon: ({ color, focused }) =>
             isIOS ? (
-              <SymbolView
-                name={focused ? "square.grid.2x2.fill" : "square.grid.2x2"}
-                tintColor={color}
-                size={24}
-              />
+              <SymbolView name={focused ? "square.grid.2x2.fill" : "square.grid.2x2"} tintColor={color} size={24} />
             ) : (
-              <Ionicons name={focused ? "grid" : "grid-outline"} size={24} color={color} />
+              <AppIcon name={focused ? "grid" : "grid-outline"} size={24} color={color} />
             ),
         }}
       />
@@ -141,9 +131,7 @@ function ClassicTabLayout() {
         name="cart"
         options={{
           title: "Panier",
-          tabBarIcon: ({ color, focused }) => (
-            <CartTabIcon color={color} focused={focused} />
-          ),
+          tabBarIcon: ({ color, focused }) => <CartTabIcon color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
@@ -152,13 +140,9 @@ function ClassicTabLayout() {
           title: "Favoris",
           tabBarIcon: ({ color, focused }) =>
             isIOS ? (
-              <SymbolView
-                name={focused ? "heart.fill" : "heart"}
-                tintColor={color}
-                size={24}
-              />
+              <SymbolView name={focused ? "heart.fill" : "heart"} tintColor={color} size={24} />
             ) : (
-              <Ionicons name={focused ? "heart" : "heart-outline"} size={24} color={color} />
+              <AppIcon name={focused ? "heart" : "heart-outline"} size={24} color={color} />
             ),
         }}
       />
@@ -168,13 +152,9 @@ function ClassicTabLayout() {
           title: "Profil",
           tabBarIcon: ({ color, focused }) =>
             isIOS ? (
-              <SymbolView
-                name={focused ? "person.fill" : "person"}
-                tintColor={color}
-                size={24}
-              />
+              <SymbolView name={focused ? "person.fill" : "person"} tintColor={color} size={24} />
             ) : (
-              <Ionicons name={focused ? "person" : "person-outline"} size={24} color={color} />
+              <AppIcon name={focused ? "person" : "person-outline"} size={24} color={color} />
             ),
         }}
       />
@@ -183,8 +163,6 @@ function ClassicTabLayout() {
 }
 
 export default function TabLayout() {
-  // NativeTabLayout uses iOS-26-only APIs (NativeTabs, SymbolView).
-  // Guard with Platform.OS to prevent it from ever rendering on Android/web.
   if (Platform.OS === "ios" && isLiquidGlassAvailable()) {
     return <NativeTabLayout />;
   }

@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { AppIcon } from '@/components/AppIcon';
 import React from 'react';
 import {
   FlatList,
@@ -45,7 +45,7 @@ export default function WishlistScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Ionicons name="heart-outline" size={64} color={colors.border} />
+            <AppIcon name="heart-outline" size={64} color={colors.border} />
             <Text style={styles.emptyTitle}>Aucun favori</Text>
             <Text style={styles.emptyText}>
               Appuyez sur le bouton coeur pour sauvegarder vos produits préférés.

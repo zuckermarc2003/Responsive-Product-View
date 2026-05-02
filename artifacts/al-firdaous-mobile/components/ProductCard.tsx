@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { AppIcon } from '@/components/AppIcon';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import React, { useCallback } from 'react';
@@ -92,7 +92,7 @@ export const ProductCard = React.memo(({ product, variant = 'grid' }: ProductCar
 
         <Animated.View style={[styles.wishlistBtn, heartStyle]}>
           <Pressable onPress={handleWishlist} hitSlop={8}>
-            <Ionicons
+            <AppIcon
               name={inWishlist ? 'heart' : 'heart-outline'}
               size={20}
               color={inWishlist ? colors.destructive : '#fff'}
@@ -113,14 +113,14 @@ export const ProductCard = React.memo(({ product, variant = 'grid' }: ProductCar
         </View>
 
         <View style={styles.ratingRow}>
-          <Ionicons name="star" size={11} color={colors.starGold} />
+          <AppIcon name="star" size={11} color={colors.starGold} />
           <Text style={styles.ratingText}>{product.rating}</Text>
           <Text style={styles.reviewCount}>({product.reviewCount})</Text>
         </View>
       </View>
 
       <Pressable style={styles.cartBtn} onPress={handleAddToCart}>
-        <Ionicons name="cart-outline" size={16} color="#fff" />
+        <AppIcon name="cart-outline" size={16} color="#fff" />
         <Text style={styles.cartBtnText}>Ajouter</Text>
       </Pressable>
     </AnimatedPressable>

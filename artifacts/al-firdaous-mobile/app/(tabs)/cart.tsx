@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { AppIcon } from '@/components/AppIcon';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 import {
@@ -59,21 +59,21 @@ export default function CartScreen() {
             style={styles.removeBtn}
             onPress={() => { removeFromCart(item.product.id, item.selectedSize); }}
           >
-            <Ionicons name="trash-outline" size={16} color={colors.destructive} />
+            <AppIcon name="trash-outline" size={16} color={colors.destructive} />
           </Pressable>
           <View style={styles.qtyRow}>
             <Pressable
               style={styles.qtyBtn}
               onPress={() => updateQuantity(item.product.id, item.selectedSize, item.quantity - 1)}
             >
-              <Ionicons name="remove" size={16} color={colors.foreground} />
+              <AppIcon name="remove" size={16} color={colors.foreground} />
             </Pressable>
             <Text style={styles.qtyText}>{item.quantity}</Text>
             <Pressable
               style={styles.qtyBtn}
               onPress={() => updateQuantity(item.product.id, item.selectedSize, item.quantity + 1)}
             >
-              <Ionicons name="add" size={16} color={colors.foreground} />
+              <AppIcon name="add" size={16} color={colors.foreground} />
             </Pressable>
           </View>
           <Text style={styles.subtotal}>{(itemPrice * item.quantity).toFixed(2)} MAD</Text>
@@ -89,7 +89,7 @@ export default function CartScreen() {
           <Text style={styles.headerTitle}>Mon Panier</Text>
         </View>
         <View style={styles.empty}>
-          <Ionicons name="cart-outline" size={64} color={colors.border} />
+          <AppIcon name="cart-outline" size={64} color={colors.border} />
           <Text style={styles.emptyTitle}>Panier vide</Text>
           <Text style={styles.emptyText}>Ajoutez des produits à votre panier pour commencer vos achats.</Text>
         </View>
@@ -131,12 +131,12 @@ export default function CartScreen() {
             </View>
 
             <View style={styles.deliveryNote}>
-              <Ionicons name="shield-checkmark-outline" size={16} color={colors.priceGreen} />
+              <AppIcon name="shield-checkmark-outline" size={16} color={colors.priceGreen} />
               <Text style={styles.deliveryNoteText}>Livraison sécurisée • Retour gratuit 30 jours</Text>
             </View>
 
             <Pressable style={styles.checkoutBtn} onPress={handleCheckout}>
-              <Ionicons name="bag-check-outline" size={20} color="#fff" />
+              <AppIcon name="bag-check-outline" size={20} color="#fff" />
               <Text style={styles.checkoutBtnText}>Commander — {total.toFixed(2)} MAD</Text>
             </Pressable>
 

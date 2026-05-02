@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { AppIcon } from '@/components/AppIcon';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -53,10 +53,10 @@ export default function HomeScreen() {
         </View>
         <View style={styles.headerActions}>
           <Pressable style={styles.headerIcon} onPress={() => router.push('/(tabs)/catalog' as any)}>
-            <Ionicons name="search-outline" size={22} color="#fff" />
+            <AppIcon name="search-outline" size={22} color="#fff" />
           </Pressable>
           <Pressable style={styles.headerIcon} onPress={() => router.push('/(tabs)/cart' as any)}>
-            <Ionicons name="cart-outline" size={22} color="#fff" />
+            <AppIcon name="cart-outline" size={22} color="#fff" />
             {itemCount > 0 && (
               <View style={styles.cartBadge}>
                 <Text style={styles.cartBadgeText}>{itemCount > 9 ? '9+' : itemCount}</Text>
@@ -81,7 +81,7 @@ export default function HomeScreen() {
             <Text style={styles.heroSub}>Jusqu'à 45% de réduction</Text>
             <Pressable style={styles.heroBtn} onPress={() => setSelectedCategory('Shoe')}>
               <Text style={styles.heroBtnText}>Découvrir</Text>
-              <Ionicons name="arrow-forward" size={14} color="#fff" />
+              <AppIcon name="arrow-forward" size={14} color="#fff" />
             </Pressable>
           </View>
         </View>
@@ -133,9 +133,9 @@ export default function HomeScreen() {
 
         {/* ── Promo Banner ── */}
         <Pressable style={styles.promoBanner} onPress={() => setSelectedCategory('Shoe')}>
-          <Ionicons name="flash" size={20} color="#fff" />
+          <AppIcon name="flash" size={20} color="#fff" />
           <Text style={styles.promoBannerText}>Soldes — Jusqu'à 45% sur les chaussures</Text>
-          <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.8)" />
+          <AppIcon name="chevron-forward" size={18} color="rgba(255,255,255,0.8)" />
         </Pressable>
 
         {/* ── On Sale ── */}

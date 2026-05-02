@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { AppIcon } from '@/components/AppIcon';
 import React, { useState } from 'react';
 import {
   Dimensions,
@@ -62,7 +62,7 @@ export default function CatalogScreen() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Catalogue</Text>
         <Pressable style={styles.sortBtn} onPress={() => setShowSort(v => !v)}>
-          <Ionicons name="options-outline" size={20} color={colors.primary} />
+          <AppIcon name="options-outline" size={20} color={colors.primary} />
           <Text style={styles.sortBtnText}>Trier</Text>
         </Pressable>
       </View>
@@ -79,7 +79,7 @@ export default function CatalogScreen() {
               <Text style={[styles.sortOptionText, sort === opt.key && styles.sortOptionTextActive]}>
                 {opt.label}
               </Text>
-              {sort === opt.key && <Ionicons name="checkmark" size={16} color={colors.primary} />}
+              {sort === opt.key && <AppIcon name="checkmark" size={16} color={colors.primary} />}
             </Pressable>
           ))}
         </View>
@@ -87,7 +87,7 @@ export default function CatalogScreen() {
 
       {/* ── Search ── */}
       <View style={styles.searchBar}>
-        <Ionicons name="search-outline" size={18} color={colors.mutedForeground} />
+        <AppIcon name="search-outline" size={18} color={colors.mutedForeground} />
         <TextInput
           style={styles.searchInput}
           value={query}
@@ -98,7 +98,7 @@ export default function CatalogScreen() {
         />
         {query.length > 0 && (
           <Pressable onPress={() => setQuery('')}>
-            <Ionicons name="close-circle" size={18} color={colors.mutedForeground} />
+            <AppIcon name="close-circle" size={18} color={colors.mutedForeground} />
           </Pressable>
         )}
       </View>
@@ -121,7 +121,7 @@ export default function CatalogScreen() {
           style={[styles.catPill, promoOnly && styles.catPillActive]}
           onPress={() => setPromoOnly(v => !v)}
         >
-          <Ionicons name="flash" size={13} color={promoOnly ? '#fff' : colors.promoBadge} />
+          <AppIcon name="flash" size={13} color={promoOnly ? '#fff' : colors.promoBadge} />
           <Text style={[styles.catPillText, promoOnly && styles.catPillTextActive]}>Promos</Text>
         </Pressable>
       </ScrollView>
@@ -140,7 +140,7 @@ export default function CatalogScreen() {
         </View>
       ) : error ? (
         <View style={styles.errorContainer}>
-          <Ionicons name="wifi-outline" size={48} color={colors.border} />
+          <AppIcon name="wifi-outline" size={48} color={colors.border} />
           <Text style={styles.errorTitle}>Erreur de connexion</Text>
           <Text style={styles.errorText}>Impossible de charger les produits.</Text>
           <Pressable style={[styles.retryBtn, { backgroundColor: colors.primary }]} onPress={() => refetch()}>
@@ -158,7 +158,7 @@ export default function CatalogScreen() {
           renderItem={renderProduct}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Ionicons name="search-outline" size={48} color={colors.border} />
+              <AppIcon name="search-outline" size={48} color={colors.border} />
               <Text style={styles.emptyTitle}>Aucun produit trouvé</Text>
               <Text style={styles.emptyText}>Essayez un autre terme de recherche</Text>
             </View>
