@@ -20,18 +20,17 @@ const BASE_URL = process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, "");
 
 const HEADERS = {
   "Content-Type": "application/json",
-  // Required to skip the ngrok browser-warning interstitial page
   "ngrok-skip-browser-warning": "true",
 };
 
-async function get<T>(path: string): Promise<T> {
+async function httpGet<T>(path: string): Promise<T> {
   if (!BASE_URL) throw new Error("no-api");
   const res = await fetch(`${BASE_URL}${path}`, { headers: HEADERS });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json() as Promise<T>;
 }
 
-async function post<T>(path: string, body: unknown): Promise<T> {
+async function httpPost<T>(path: string, body: unknown): Promise<T> {
   if (!BASE_URL) throw new Error("no-api");
   const res = await fetch(`${BASE_URL}${path}`, {
     method: "POST",
@@ -42,12 +41,31 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-// ── Normalisers ────────────────────────────────────────────
+// ── Response parsers ───────────────────────────────────────
+//
+// /products/get/all  → { "products": { "Shoe": [...], "Sandal": [...], ... } }
+// /products/get?...  → { "products": [...] }
 
-const DEFAULT_IMAGE = "https://res.cloudinary.com/de2wpriie/image/upload/y9DpT_eouhy5.jpg";
+type AllProductsResponse = { products: Record<string, ApiProduct[]> };
+type FilteredProductsResponse = { products: ApiProduct[] };
+
+function parseAllProducts(data: AllProductsResponse): ApiProduct[] {
+  if (!data?.products) return [];
+  // Values are arrays per product type — flatten them all
+  return Object.values(data.products).flat();
+}
+
+function parseFilteredProducts(data: FilteredProductsResponse): ApiProduct[] {
+  if (!data?.products) return [];
+  return Array.isArray(data.products) ? data.products : [];
+}
+
+// ── Normaliser: ApiProduct → Product ──────────────────────
+
+const DEFAULT_IMAGE =
+  "https://res.cloudinary.com/de2wpriie/image/upload/y9DpT_eouhy5.jpg";
 
 function normalizeProduct(raw: ApiProduct): Product {
-  // Collect all 5 image slots, drop the default placeholder duplicates
   const allImages = [raw.image, raw.image1, raw.image2, raw.image3, raw.image4];
   const images = allImages.filter(
     (img) => img && img !== DEFAULT_IMAGE && img.trim() !== ""
@@ -62,7 +80,6 @@ function normalizeProduct(raw: ApiProduct): Product {
     availableQty: Math.max(0, s.quantity - (s.reserved ?? 0)),
   }));
 
-  // Only show sizes that have available stock
   const sizes = stock.filter((s) => s.availableQty > 0).map((s) => s.size);
 
   return {
@@ -96,6 +113,24 @@ function normalizeReview(raw: ApiReview): Review {
   };
 }
 
+// ── In-memory product cache ────────────────────────────────
+
+let _allProductsCache: ApiProduct[] | null = null;
+let _allProductsCachedAt = 0;
+const CACHE_TTL = 5 * 60 * 1000;
+
+async function getAllProductsRaw(): Promise<ApiProduct[]> {
+  const now = Date.now();
+  if (_allProductsCache && now - _allProductsCachedAt < CACHE_TTL) {
+    return _allProductsCache;
+  }
+  const data = await httpGet<AllProductsResponse>("/products/get/all");
+  const flat = parseAllProducts(data);
+  _allProductsCache = flat;
+  _allProductsCachedAt = now;
+  return flat;
+}
+
 // ── Filters ────────────────────────────────────────────────
 
 export interface ProductFilters {
@@ -108,29 +143,27 @@ export interface ProductFilters {
 
 function applyClientFilters(products: Product[], filters: ProductFilters): Product[] {
   let result = [...products];
+
+  if (filters.category && filters.category !== "all") {
+    result = result.filter((p) => p.product_type === filters.category);
+  }
+  if (filters.search) {
+    const q = filters.search.toLowerCase();
+    result = result.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.brand.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        p.ref.toLowerCase().includes(q)
+    );
+  }
   if (filters.promo) result = result.filter((p) => p.promo > 0);
   if (filters.is_new) result = result.filter((p) => p.isNew);
   if (filters.sort === "price_asc") result.sort((a, b) => a.price - b.price);
   if (filters.sort === "price_desc") result.sort((a, b) => b.price - a.price);
   if (filters.sort === "rating") result.sort((a, b) => b.rating - a.rating);
+
   return result;
-}
-
-// ── In-memory product cache to avoid redundant /all calls ──
-
-let _allProductsCache: ApiProduct[] | null = null;
-let _allProductsCachedAt = 0;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-async function getAllProductsRaw(): Promise<ApiProduct[]> {
-  const now = Date.now();
-  if (_allProductsCache && now - _allProductsCachedAt < CACHE_TTL) {
-    return _allProductsCache;
-  }
-  const data = await get<ApiProduct[]>("/products/get/all");
-  _allProductsCache = data;
-  _allProductsCachedAt = now;
-  return data;
 }
 
 // ── Products ───────────────────────────────────────────────
@@ -140,18 +173,14 @@ export async function fetchProducts(filters: ProductFilters = {}): Promise<Produ
   try {
     let raw: ApiProduct[];
 
-    if (filters.search && filters.search.trim().length > 0) {
-      // Dedicated search endpoint
-      raw = await get<ApiProduct[]>(
-        `/product/search/get?search=${encodeURIComponent(filters.search.trim())}`
-      );
-    } else if (filters.category && filters.category !== "all") {
-      // Filter by product_type on the server
-      raw = await get<ApiProduct[]>(
+    if (filters.category && filters.category !== "all") {
+      // Use the type-filtered endpoint → { "products": [...] }
+      const data = await httpGet<FilteredProductsResponse>(
         `/products/get?product_type=${encodeURIComponent(filters.category)}`
       );
+      raw = parseFilteredProducts(data);
     } else {
-      // All products
+      // All products → { "products": { "Shoe": [...], ... } }
       raw = await getAllProductsRaw();
     }
 
@@ -165,7 +194,6 @@ export async function fetchProducts(filters: ProductFilters = {}): Promise<Produ
 export async function fetchProduct(id: string): Promise<Product | null> {
   if (!BASE_URL) return PRODUCTS.find((p) => p.id === id) ?? null;
   try {
-    // Try to find in the all-products cache first (avoids extra network call)
     const all = await getAllProductsRaw();
     const raw = all.find((p) => String(p.id) === id);
     return raw ? normalizeProduct(raw) : null;
@@ -178,13 +206,7 @@ export async function fetchProduct(id: string): Promise<Product | null> {
 export async function fetchNewArrivals(): Promise<Product[]> {
   if (!BASE_URL) return getNewArrivals();
   try {
-    // newest=true query param — falls back to client filter if not supported
-    let raw: ApiProduct[];
-    try {
-      raw = await get<ApiProduct[]>("/products/get?newest=true");
-    } catch {
-      raw = await getAllProductsRaw();
-    }
+    const raw = await getAllProductsRaw();
     const products = raw.map(normalizeProduct).filter((p) => p.isNew);
     return products.length > 0 ? products : getNewArrivals();
   } catch (e) {
@@ -230,8 +252,8 @@ export async function fetchRelated(productId: string): Promise<Product[]> {
 export async function fetchReviews(productId: string): Promise<Review[]> {
   if (!BASE_URL) return MOCK_REVIEWS;
   try {
-    const raw = await get<ApiReview[]>(`/reviews/get?product_id=${productId}`);
-    return raw.map(normalizeReview);
+    const raw = await httpGet<ApiReview[]>(`/reviews/get?product_id=${productId}`);
+    return Array.isArray(raw) ? raw.map(normalizeReview) : MOCK_REVIEWS;
   } catch (e) {
     console.warn("[api] fetchReviews failed, using mock data:", e);
     return MOCK_REVIEWS;
@@ -239,7 +261,7 @@ export async function fetchReviews(productId: string): Promise<Review[]> {
 }
 
 export async function submitReview(payload: AddReviewPayload): Promise<void> {
-  await post<unknown>("/reviews/add/", payload);
+  await httpPost<unknown>("/reviews/add/", payload);
 }
 
 // ── Orders ────────────────────────────────────────────────
@@ -255,10 +277,10 @@ export interface OrderStatus {
 }
 
 export async function checkOrder(orderId: string): Promise<OrderStatus> {
-  return get<OrderStatus>(`/orders/check?order_id=${encodeURIComponent(orderId)}`);
+  return httpGet<OrderStatus>(`/orders/check?order_id=${encodeURIComponent(orderId)}`);
 }
 
-// ── Mock filter logic (fallback when no API) ───────────────
+// ── Mock fallback ──────────────────────────────────────────
 
 function applyMockFilters(products: Product[], filters: ProductFilters): Product[] {
   let result = [...products];
