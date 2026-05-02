@@ -359,18 +359,23 @@
     padding:        0 8px;
   }
 
-  /* Items panel floats to top */
-  .cart-items-panel {
-    order:  1;
-    width:  100%;
-  }
-
-  /* Sidebar drops to bottom */
+  /* Sidebar (order summary) floats to top on mobile */
   .cart-sidebar {
-    order:    2;
+    order:    1;
     width:    100%;
     position: relative;
     top:      0;
+  }
+
+  /* Items panel comes below */
+  .cart-items-panel {
+    order: 2;
+    width: 100%;
+  }
+
+  /* Add bottom padding so rows aren't hidden behind the floating bar */
+  .cart-list {
+    padding-bottom: 80px;
   }
 }
 
