@@ -1,0 +1,467 @@
+/* ─── Reset ─────────────────────────────────────────────────────────────────── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ─── Page layout ────────────────────────────────────────────────────────────── */
+/*
+  Desktop: sidebar (~34%) on left, items panel (~63%) on right.
+  Mobile:  stacks vertically — items panel FIRST (order:1), sidebar SECOND (order:2).
+  The order swap is done with CSS `order` so the DOM stays untouched.
+*/
+.cart-page {
+  width:           100%;
+  display:         flex;
+  align-items:     flex-start;
+  justify-content: space-between;
+  gap:             16px;
+  margin-top:      12px;
+  margin-bottom:   3%;
+  padding:         0 12px;
+}
+
+/* ─── Sidebar ─────────────────────────────────────────────────────────────────── */
+/*
+  FIX: removed `height: 430px` — fixed heights cause overflow/clipping when
+  content or viewport size changes. Let content drive the height.
+*/
+.cart-sidebar {
+  width:            34%;
+  flex-shrink:      0;
+  display:          flex;
+  flex-direction:   column;
+  gap:              12px;
+  position:         sticky;
+  top:              115px;
+  align-self:       flex-start;
+}
+
+/* ─── Currency bar ────────────────────────────────────────────────────────────── */
+.currency-bar {
+  width:            100%;
+  height:           55px;
+  background-color: #efecec;
+  display:          flex;
+  align-items:      center;
+  justify-content:  space-between;
+  border-radius:    8px;
+  padding:          0 10px 0 4px;
+  border:           1px solid #ccc;
+  box-shadow:       0 1px 4px rgba(0,0,0,0.07);
+}
+
+.currency-bar__selector {
+  display:     flex;
+  align-items: center;
+  gap:         4px;
+  height:      100%;
+}
+
+.currency-bar__flag {
+  display:     flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ─── Order summary ───────────────────────────────────────────────────────────── */
+/*
+  FIX: removed `height: 365px` — same issue as sidebar.
+  `.payment-logos__grid` was `position: absolute; bottom: 0` inside a fixed-height
+  parent; that's now replaced with normal flow inside a flex column.
+*/
+.order-summary {
+  width:            100%;
+  background-color: #efeded;
+  border-radius:    10px;
+  display:          flex;
+  flex-direction:   column;
+  overflow:         hidden;
+  padding-bottom:   12px;
+}
+
+.order-summary__title {
+  padding: 14px 0 0;
+}
+
+.order-summary__list-item {
+  background-color: #efeded;
+  font-weight:      600;
+  font-size:        15px;
+}
+
+.order-summary__grand-total {
+  font-weight: 700;
+  font-size:   17px;
+  padding:     10px 12px 6px;
+}
+
+/* ─── Payment logos ───────────────────────────────────────────────────────────── */
+/*
+  FIX: changed from `position: absolute` to normal flow so it doesn't
+  escape the now-auto-height parent.
+*/
+.payment-logos {
+  display:         flex;
+  justify-content: center;
+  padding-top:     8px;
+}
+
+.payment-logos__grid {
+  display:         flex;
+  justify-content: center;
+  gap:             6px;
+  width:           auto;
+  height:          38px;
+}
+
+.payment-logos__grid img {
+  width:       auto;
+  height:      100%;
+  max-width:   40px;
+  object-fit:  contain;
+}
+
+/* ─── Cart items panel ────────────────────────────────────────────────────────── */
+.cart-items-panel {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ─── Empty cart state ────────────────────────────────────────────────────────── */
+.cart__empty {
+  width:           100%;
+  min-height:      300px;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  flex-direction:  column;
+  gap:             12px;
+  padding:         32px 16px;
+}
+
+.cart__empty-icon {
+  color: #aaa;
+}
+
+/* ─── Cart list ───────────────────────────────────────────────────────────────── */
+.cart-list {
+  width:          100%;
+  display:        flex;
+  flex-direction: column;
+}
+
+/* ─── Column headers ──────────────────────────────────────────────────────────── */
+.cart-list-header {
+  display:               grid;
+  grid-template-columns: 1fr 180px 120px;
+  padding:               8px 16px 6px;
+  font-weight:           600;
+  font-size:             12px;
+  color:                 #888;
+  text-transform:        uppercase;
+  letter-spacing:        0.05em;
+}
+
+.cart-list-header__product { text-align: left; }
+.cart-list-header__actions { text-align: center; }
+.cart-list-header__total   { text-align: right; }
+
+/* ─── Cart row ────────────────────────────────────────────────────────────────── */
+/*
+  Desktop: 3-column grid — product info | controls | line total.
+  The columns match `.cart-list-header` exactly so headers stay aligned.
+*/
+.cart-row {
+  display:               grid;
+  grid-template-columns: 1fr 180px 120px;
+  align-items:           center;
+  border-top:            1px solid #f0f0f0;
+  padding:               12px 16px;
+  gap:                   12px;
+  min-height:            100px;
+  background:            #fff;
+  transition:            background 0.15s ease;
+}
+
+.cart-row:hover {
+  background: #fafafa;
+}
+
+/* ─── Col 1: Product ──────────────────────────────────────────────────────────── */
+.cart-row__product {
+  display:     flex;
+  align-items: center;
+  gap:         12px;
+  min-width:   0;
+}
+
+/* ─── Cart item image ─────────────────────────────────────────────────────────── */
+.cart-item-image {
+  flex-shrink:   0;
+  width:         80px;
+  height:        80px;
+  border-radius: 8px;
+  overflow:      hidden;
+  border:        1px solid #eee;
+}
+
+.cart-item-image__img {
+  width:       100%;
+  height:      100%;
+  object-fit:  cover;
+  display:     block;
+}
+
+/* ─── Cart item details ───────────────────────────────────────────────────────── */
+.cart-item-details {
+  display:        flex;
+  flex-direction: column;
+  gap:            3px;
+  min-width:      0;
+}
+
+.cart-item-details__ref {
+  font-weight:   600;
+  font-size:     13px;
+  white-space:   nowrap;
+  overflow:      hidden;
+  text-overflow: ellipsis;
+}
+
+.cart-item-details__price {
+  display:     flex;
+  align-items: center;
+  gap:         6px;
+  flex-wrap:   wrap;
+}
+
+.cart-item-details__size {
+  font-size: 12px;
+  color:     #888;
+}
+
+/* ─── Col 2: Quantity + remove ────────────────────────────────────────────────── */
+.cart-row__actions {
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  gap:             6px;
+}
+
+/* ─── Col 3: Line total ───────────────────────────────────────────────────────── */
+.cart-row__total {
+  display:        flex;
+  flex-direction: column;
+  align-items:    flex-end;
+  gap:            3px;
+}
+
+.cart-row__total-price {
+  font-size:   15px;
+  font-weight: 700;
+}
+
+/* ─── Price states ────────────────────────────────────────────────────────────── */
+.price--current {
+  color: #1a6b3c;
+}
+
+.price--original {
+  font-size:            11px;
+  font-weight:          500;
+  text-decoration:      line-through;
+  text-decoration-color: #d0021b;
+  color:                #aaa;
+}
+
+.price--discount {
+  color:       #d0021b;
+  font-weight: bold;
+}
+
+/* ─── Quantity control ────────────────────────────────────────────────────────── */
+.quantity-control {
+  display:     flex;
+  align-items: center;
+}
+
+.quantity-control__input {
+  width:            40px;
+  height:           30px;
+  background-color: #fff;
+  color:            #1a1a1a;
+  outline:          none;
+  text-align:       center;
+  border:           1px solid #dee2e6;
+  font-size:        14px;
+}
+
+.quantity-control__btn {
+  height:          30px;
+  width:           30px;
+  padding:         0;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  font-size:       16px;
+  line-height:     1;
+}
+
+/* ─── Remove button ───────────────────────────────────────────────────────────── */
+.cart-item-remove-btn {
+  border-color: #d0021b;
+  color:        #d0021b;
+  outline:      none;
+  transition:   background 0.15s ease, color 0.15s ease;
+}
+
+.cart-item-remove-btn:hover {
+  background-color: #d0021b;
+  color:            #fff;
+  border-color:     #d0021b;
+}
+
+/* ─── Responsive: tablet (800px) — sidebar stacks below items ─────────────────── */
+/*
+  KEY FIX: on tablet/mobile the sidebar (order summary) should appear BELOW
+  the cart items, not above. Users need to see their items first.
+  We use CSS `order` so the DOM doesn't need to change.
+*/
+@media (max-width: 800px) {
+  .cart-page {
+    flex-direction: column;
+    gap:            16px;
+    padding:        0 8px;
+  }
+
+  /* Items panel floats to top */
+  .cart-items-panel {
+    order:  1;
+    width:  100%;
+  }
+
+  /* Sidebar drops to bottom */
+  .cart-sidebar {
+    order:    2;
+    width:    100%;
+    position: relative;
+    top:      0;
+  }
+}
+
+/* ─── Responsive: large phone (560px) ────────────────────────────────────────── */
+/*
+  Cart row switches to a 2-zone layout:
+  - Top zone:    image (fixed width) + product details
+  - Bottom zone: quantity controls on left, line total on right
+  No data is hidden — quantity, total, and remove are all visible.
+*/
+@media (max-width: 560px) {
+  .cart-list-header {
+    display: none;
+  }
+
+  .cart-row {
+    display:               grid;
+    grid-template-columns: 70px 1fr;
+    grid-template-rows:    auto auto;
+    grid-template-areas:
+      "image details"
+      "image bottom";
+    padding: 12px 10px;
+    gap:     10px 12px;
+    min-height: unset;
+  }
+
+  .cart-row__product {
+    grid-area: image;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  /* Image fills its grid area */
+  .cart-item-image {
+    width:  70px;
+    height: 70px;
+  }
+
+  /* Details column to the right of image */
+  .cart-item-details {
+    grid-area: details;
+    align-self: flex-start;
+  }
+
+  /*
+    Bottom zone: quantity controls + total side by side.
+    Remove button is tucked after the quantity stepper.
+  */
+  .cart-row__actions {
+    grid-area:       bottom;
+    flex-direction:  row;
+    justify-content: flex-start;
+    align-items:     center;
+    gap:             8px;
+    flex-wrap:       wrap;
+  }
+
+  /* Total moves to the right end of the bottom zone */
+  .cart-row__total {
+    grid-area:   bottom;
+    align-items: flex-end;
+    align-self:  center;
+    justify-self: end;
+  }
+
+  /* With grid-area collision, use sub-grid or separate element.
+     Cleaner: show total in a dedicated slot via flex row on the bottom area. */
+  .cart-row__bottom {
+    grid-area:       bottom;
+    display:         flex;
+    align-items:     center;
+    justify-content: space-between;
+    flex-wrap:       wrap;
+    gap:             8px;
+  }
+
+  .cart-row__total-price {
+    font-size: 14px;
+  }
+
+  .cart-item-details__ref {
+    font-size: 12px;
+  }
+}
+
+/* ─── Responsive: small phone (380px) ────────────────────────────────────────── */
+@media (max-width: 380px) {
+  .cart-page {
+    padding: 0 4px;
+  }
+
+  .cart-row {
+    grid-template-columns: 60px 1fr;
+    padding: 10px 8px;
+    gap: 8px 10px;
+  }
+
+  .cart-item-image {
+    width:  60px;
+    height: 60px;
+  }
+
+  .cart-item-details__ref { font-size: 11px; }
+  .cart-item-details__size { font-size: 11px; }
+  .price--current { font-size: 12px; }
+
+  .quantity-control__input { width: 34px; height: 28px; font-size: 13px; }
+  .quantity-control__btn   { width: 28px; height: 28px; }
+
+  .cart-row__total-price { font-size: 13px; }
+
+  .order-summary__list-item  { font-size: 13px; }
+  .order-summary__grand-total { font-size: 15px; }
+}
