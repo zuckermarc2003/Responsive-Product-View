@@ -376,86 +376,65 @@
 
 /* ─── Responsive: large phone (560px) ────────────────────────────────────────── */
 /*
-  Cart row switches to a 2-zone layout:
-  - Top zone:    image (fixed width) + product details
-  - Bottom zone: quantity controls on left, line total on right
-  No data is hidden — quantity, total, and remove are all visible.
+  Layout:
+    Row 1: product info — image (left) + details (right), flex row
+    Row 2: actions (left: stepper + trash) | total (right: line price)
+
+  Each grid child gets its OWN named area — no two elements share the same
+  area, which was the root cause of the trash-button/total overlap.
 */
 @media (max-width: 560px) {
   .cart-list-header {
     display: none;
   }
 
+  /* 2-column × 2-row grid with 4 distinct named areas */
   .cart-row {
     display:               grid;
-    grid-template-columns: 70px 1fr;
+    grid-template-columns: 1fr auto;
     grid-template-rows:    auto auto;
     grid-template-areas:
-      "image details"
-      "image bottom";
-    padding: 12px 10px;
-    gap:     10px 12px;
+      "product product"
+      "actions total";
+    padding:    12px 10px;
+    gap:        8px 0;
     min-height: unset;
+    align-items: center;
   }
 
+  /* Row 1: image + details in a flex row — unchanged from desktop */
   .cart-row__product {
-    grid-area: image;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0;
+    grid-area:      product;
+    flex-direction: row;
+    align-items:    center;
+    gap:            10px;
   }
 
-  /* Image fills its grid area */
   .cart-item-image {
     width:  70px;
     height: 70px;
+    flex-shrink: 0;
   }
 
-  /* Details column to the right of image */
-  .cart-item-details {
-    grid-area: details;
-    align-self: flex-start;
-  }
-
-  /*
-    Bottom zone: quantity controls + total side by side.
-    Remove button is tucked after the quantity stepper.
-  */
+  /* Row 2 left: stepper + trash in a horizontal line */
   .cart-row__actions {
-    grid-area:       bottom;
+    grid-area:       actions;
     flex-direction:  row;
     justify-content: flex-start;
     align-items:     center;
-    gap:             8px;
-    flex-wrap:       wrap;
+    gap:             6px;
   }
 
-  /* Total moves to the right end of the bottom zone */
+  /* Row 2 right: line total — no overlap, separate grid area */
   .cart-row__total {
-    grid-area:   bottom;
-    align-items: flex-end;
-    align-self:  center;
-    justify-self: end;
+    grid-area:    total;
+    align-items:  flex-end;
+    align-self:   center;
+    padding-left: 8px;
   }
 
-  /* With grid-area collision, use sub-grid or separate element.
-     Cleaner: show total in a dedicated slot via flex row on the bottom area. */
-  .cart-row__bottom {
-    grid-area:       bottom;
-    display:         flex;
-    align-items:     center;
-    justify-content: space-between;
-    flex-wrap:       wrap;
-    gap:             8px;
-  }
-
-  .cart-row__total-price {
-    font-size: 14px;
-  }
-
-  .cart-item-details__ref {
-    font-size: 12px;
-  }
+  .cart-row__total-price { font-size: 14px; }
+  .cart-item-details__ref { font-size: 12px; }
 }
 
 /* ─── Responsive: small phone (380px) ────────────────────────────────────────── */
@@ -465,9 +444,8 @@
   }
 
   .cart-row {
-    grid-template-columns: 60px 1fr;
     padding: 10px 8px;
-    gap: 8px 10px;
+    gap:     6px 0;
   }
 
   .cart-item-image {
@@ -475,15 +453,14 @@
     height: 60px;
   }
 
-  .cart-item-details__ref { font-size: 11px; }
+  .cart-item-details__ref  { font-size: 11px; }
   .cart-item-details__size { font-size: 11px; }
-  .price--current { font-size: 12px; }
+  .price--current          { font-size: 12px; }
 
-  .quantity-control__input { width: 34px; height: 28px; font-size: 13px; }
+  .quantity-control__input { width: 32px; height: 28px; font-size: 13px; }
   .quantity-control__btn   { width: 28px; height: 28px; }
 
-  .cart-row__total-price { font-size: 13px; }
-
-  .order-summary__list-item  { font-size: 13px; }
-  .order-summary__grand-total { font-size: 15px; }
+  .cart-row__total-price          { font-size: 13px; }
+  .order-summary__list-item       { font-size: 13px; }
+  .order-summary__grand-total     { font-size: 15px; }
 }
