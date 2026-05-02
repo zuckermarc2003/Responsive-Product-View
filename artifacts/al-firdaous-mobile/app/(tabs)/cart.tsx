@@ -1,5 +1,6 @@
 import { AppIcon } from '@/components/AppIcon';
 import * as Haptics from 'expo-haptics';
+import { router } from 'expo-router';
 import React from 'react';
 import {
   Alert,
@@ -26,21 +27,8 @@ export default function CartScreen() {
   const styles = makeStyles(colors, topPad, bottomPad);
 
   const handleCheckout = () => {
-    Alert.alert(
-      'Confirmer la commande',
-      `Total: ${total.toFixed(2)} MAD\n\nVotre commande sera traitée par notre équipe.`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Commander',
-          onPress: () => {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            clearCart();
-            Alert.alert('Commande passée!', 'Merci pour votre achat. Notre équipe vous contactera bientôt.');
-          },
-        },
-      ]
-    );
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push('/checkout' as any);
   };
 
   const renderItem = ({ item }: { item: CartItem }) => {
