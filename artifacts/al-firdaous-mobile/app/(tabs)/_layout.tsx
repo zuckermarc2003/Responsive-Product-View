@@ -81,12 +81,14 @@ function ClassicTabLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarStyle: {
-          position: "absolute",
+          // position: absolute only on iOS for the blur glass effect.
+          // On Android it would overlap the system nav buttons — must NOT be absolute.
+          ...(isIOS ? { position: "absolute" as const } : {}),
           backgroundColor: isIOS ? "transparent" : colors.tabBar,
           borderTopWidth: 1,
           borderTopColor: colors.tabBarBorder,
-          elevation: 0,
-          height: isWeb ? 84 : 60,
+          elevation: 4,
+          ...(isWeb ? { height: 84 } : {}),
         },
         tabBarBackground: () =>
           isIOS ? (
