@@ -452,6 +452,94 @@
 
   .cart-row__total-price  { font-size: 16px; }
   .price--original        { font-size: 12px; }
+
+  /* Center the price row inside the product details at small widths */
+  .cart-item-details__price {
+    justify-content: center;
+  }
+
+  /* Also center the size label */
+  .cart-item-details__size {
+    text-align: center;
+    width:      100%;
+  }
+}
+
+/* ─── Floating checkout bar ───────────────────────────────────────────────────── */
+/*
+  Sticks to the bottom of the viewport on mobile only.
+  Hidden on desktop (sidebar checkout button is visible there).
+  Extra padding on the cart-list prevents items from hiding behind it.
+*/
+.cart-float-bar {
+  display: none; /* hidden by default — shown only on mobile below */
+}
+
+@media (max-width: 800px) {
+  .cart-float-bar {
+    display:         flex;
+    align-items:     center;
+    justify-content: space-between;
+    position:        fixed;
+    bottom:          0;
+    left:            0;
+    right:           0;
+    z-index:         100;
+    background:      #1a1a1a;
+    color:           #fff;
+    padding:         12px 16px;
+    gap:             12px;
+    box-shadow:      0 -2px 16px rgba(0,0,0,0.18);
+  }
+
+  .cart-float-bar__total {
+    display:        flex;
+    flex-direction: column;
+    gap:            1px;
+  }
+
+  .cart-float-bar__label {
+    font-size:      0.62rem;
+    font-weight:    600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color:          #aaa;
+  }
+
+  .cart-float-bar__amount {
+    font-size:   1.05rem;
+    font-weight: 800;
+    color:       #4ade80;
+  }
+
+  .cart-float-bar__btn {
+    display:         flex;
+    align-items:     center;
+    gap:             8px;
+    background:      #0e92e4;
+    color:           #fff;
+    border:          none;
+    border-radius:   8px;
+    padding:         10px 20px;
+    font-size:       0.78rem;
+    font-weight:     700;
+    letter-spacing:  0.06em;
+    text-transform:  uppercase;
+    cursor:          pointer;
+    white-space:     nowrap;
+    transition:      background 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .cart-float-bar__btn:hover:not(:disabled) {
+    background:  #0a7bc4;
+    box-shadow:  0 4px 12px rgba(14,146,228,0.4);
+  }
+
+  .cart-float-bar__btn:disabled {
+    background: #444;
+    color:      #888;
+    cursor:     not-allowed;
+  }
 }
 
 /* ─── Responsive: small phone (380px) ────────────────────────────────────────── */
