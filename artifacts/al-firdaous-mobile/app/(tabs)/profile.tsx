@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCart } from '@/context/CartContext';
+import { useLanguage, type Lang } from '@/context/LanguageContext';
 import { THEMES, useTheme } from '@/context/ThemeContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useColors } from '@/hooks/useColors';
@@ -31,7 +32,7 @@ interface SettingRowProps {
 function SettingRow({ icon, label, value, toggle, toggleValue, onToggle, onPress, color }: SettingRowProps) {
   const colors = useColors();
   return (
-    <Pressable style={rowStyles.row} onPress={onPress} disabled={toggle}>
+    <Pressable style={rowStyles.row} onPress={onPress} disabled={toggle && !onPress}>
       <View style={[rowStyles.iconBox, { backgroundColor: color ? `${color}18` : colors.secondary }]}>
         <AppIcon name={icon as any} size={18} color={color ?? colors.primary} />
       </View>
@@ -63,25 +64,26 @@ const rowStyles = StyleSheet.create({
 
 function ThemeSelector() {
   const colors = useColors();
+  const { t } = useLanguage();
   const { theme, setTheme } = useTheme();
   return (
     <View style={[themeStyles.section, { marginHorizontal: 16, marginBottom: 12 }]}>
-      <Text style={[themeStyles.title, { color: colors.foreground }]}>Thème</Text>
+      <Text style={[themeStyles.title, { color: colors.foreground }]}>{t.themeSection}</Text>
       <View style={[themeStyles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        {THEMES.map((t, i) => (
+        {THEMES.map((th, i) => (
           <Pressable
-            key={t.id}
+            key={th.id}
             style={[
               themeStyles.row,
               i < THEMES.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border },
             ]}
-            onPress={() => setTheme(t.id)}
+            onPress={() => setTheme(th.id)}
           >
-            <View style={[themeStyles.swatch, { backgroundColor: t.primary }]} />
-            <Text style={[themeStyles.label, { color: colors.foreground }]}>{t.label}</Text>
-            <Text style={[themeStyles.sub, { color: colors.mutedForeground }]}>{t.primary}</Text>
-            {theme.id === t.id && (
-              <AppIcon name="checkmark-circle" size={20} color={t.primary} />
+            <View style={[themeStyles.swatch, { backgroundColor: th.primary }]} />
+            <Text style={[themeStyles.label, { color: colors.foreground }]}>{th.label}</Text>
+            <Text style={[themeStyles.sub, { color: colors.mutedForeground }]}>{th.primary}</Text>
+            {theme.id === th.id && (
+              <AppIcon name="checkmark-circle" size={20} color={th.primary} />
             )}
           </Pressable>
         ))}
@@ -105,17 +107,21 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { items: cartItems, itemCount } = useCart();
   const { items: wishlistItems } = useWishlist();
+  const { t, lang, setLang } = useLanguage();
   const [notifications, setNotifications] = useState(true);
-  const [language, setLanguage] = useState<'fr' | 'ar'>('fr');
 
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const bottomPad = Platform.OS === 'web' ? 34 : insets.bottom;
   const styles = makeStyles(colors, topPad, bottomPad);
 
+  function toggleLanguage() {
+    setLang(lang === 'fr' ? 'ar' : 'fr');
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profil</Text>
+        <Text style={styles.headerTitle}>{t.profileTitle}</Text>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -124,55 +130,55 @@ export default function ProfileScreen() {
           <View style={styles.avatar}>
             <AppIcon name="person" size={36} color={colors.primary} />
           </View>
-          <Text style={styles.profileName}>Client AL-FIRDAOUS</Text>
-          <Text style={styles.profileEmail}>Bienvenue dans notre boutique</Text>
+          <Text style={styles.profileName}>{t.clientName}</Text>
+          <Text style={styles.profileEmail}>{t.welcome}</Text>
 
           <View style={styles.statsRow}>
             <View style={styles.stat}>
               <Text style={styles.statValue}>{itemCount}</Text>
-              <Text style={styles.statLabel}>Panier</Text>
+              <Text style={styles.statLabel}>{t.tabCart}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.stat}>
               <Text style={styles.statValue}>{wishlistItems.length}</Text>
-              <Text style={styles.statLabel}>Favoris</Text>
+              <Text style={styles.statLabel}>{t.tabWishlist}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.stat}>
               <Text style={styles.statValue}>0</Text>
-              <Text style={styles.statLabel}>Commandes</Text>
+              <Text style={styles.statLabel}>{t.orders}</Text>
             </View>
           </View>
         </View>
 
         {/* ── Store Info ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Boutique</Text>
+          <Text style={styles.sectionTitle}>{t.store}</Text>
           <View style={styles.sectionCard}>
             <SettingRow
               icon="location-outline"
-              label="Livraison Maroc"
-              value="Nationwide"
-              onPress={() => Alert.alert('Livraison', 'Livraison disponible dans tout le Maroc.')}
+              label={t.deliveryRow}
+              value={t.nationwide}
+              onPress={() => Alert.alert(t.deliveryRow, t.deliveryAlert)}
             />
             <View style={styles.divider} />
             <SettingRow
               icon="time-outline"
-              label="Horaires"
-              value="9h–21h"
+              label={t.hours}
+              value={t.hoursVal}
               onPress={() => {}}
             />
             <View style={styles.divider} />
             <SettingRow
               icon="call-outline"
-              label="Contact"
+              label={t.contact}
               value="+212 600 000 000"
-              onPress={() => Alert.alert('Contact', 'Appelez-nous au +212 600 000 000')}
+              onPress={() => Alert.alert(t.contact, t.contactAlert)}
             />
             <View style={styles.divider} />
             <SettingRow
               icon="logo-instagram"
-              label="Instagram"
+              label={t.instagram}
               value="@alfirdaousstore"
               onPress={() => {}}
             />
@@ -181,21 +187,22 @@ export default function ProfileScreen() {
 
         {/* ── Preferences ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Préférences</Text>
+          <Text style={styles.sectionTitle}>{t.preferences}</Text>
           <View style={styles.sectionCard}>
             <SettingRow
               icon="notifications-outline"
-              label="Notifications"
+              label={t.notifications}
               toggle
               toggleValue={notifications}
               onToggle={setNotifications}
             />
             <View style={styles.divider} />
+            {/* Language toggle — tapping cycles FR ↔ AR */}
             <SettingRow
               icon="language-outline"
-              label="Langue"
-              value={language === 'fr' ? 'Français' : 'العربية'}
-              onPress={() => setLanguage(l => l === 'fr' ? 'ar' : 'fr')}
+              label={t.language}
+              value={t.langName}
+              onPress={toggleLanguage}
             />
           </View>
         </View>
@@ -205,23 +212,23 @@ export default function ProfileScreen() {
 
         {/* ── Legal ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Informations</Text>
+          <Text style={styles.sectionTitle}>{t.information}</Text>
           <View style={styles.sectionCard}>
             <SettingRow
               icon="document-text-outline"
-              label="Conditions d'utilisation"
-              onPress={() => Alert.alert('CGU', 'Conditions générales d\'utilisation de AL-FIRDAOUS STORE.')}
+              label={t.terms}
+              onPress={() => Alert.alert(t.terms, t.termsAlert)}
             />
             <View style={styles.divider} />
             <SettingRow
               icon="shield-outline"
-              label="Politique de confidentialité"
-              onPress={() => Alert.alert('Confidentialité', 'Vos données sont protégées.')}
+              label={t.privacy}
+              onPress={() => Alert.alert(t.privacy, t.privacyAlert)}
             />
             <View style={styles.divider} />
             <SettingRow
               icon="information-circle-outline"
-              label="Version"
+              label={t.version}
               value="1.0.0"
             />
           </View>
@@ -236,7 +243,7 @@ export default function ProfileScreen() {
               resizeMode="contain"
             />
           </View>
-          <Text style={styles.brandTagline}>Qualité & Élégance depuis 2018</Text>
+          <Text style={styles.brandTagline}>{t.tagline}</Text>
         </View>
 
         <View style={{ height: bottomPad + 80 }} />
@@ -257,7 +264,6 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottom
       borderBottomColor: colors.border,
     },
     headerTitle: { fontSize: 20, fontFamily: 'Inter_700Bold', color: colors.foreground },
-
     profileCard: {
       backgroundColor: colors.card,
       margin: 16,
@@ -283,7 +289,6 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottom
     },
     profileName: { fontSize: 18, fontFamily: 'Inter_700Bold', color: colors.foreground },
     profileEmail: { fontSize: 13, fontFamily: 'Inter_400Regular', color: colors.mutedForeground, marginTop: 2 },
-
     statsRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -295,7 +300,6 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottom
     statValue: { fontSize: 20, fontFamily: 'Inter_700Bold', color: colors.primary },
     statLabel: { fontSize: 11, fontFamily: 'Inter_500Medium', color: colors.mutedForeground },
     statDivider: { width: 1, height: 32, backgroundColor: colors.border },
-
     section: { marginHorizontal: 16, marginBottom: 16 },
     sectionTitle: {
       fontSize: 13,
@@ -317,7 +321,6 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottom
       overflow: 'hidden',
     },
     divider: { height: 1, backgroundColor: colors.border, marginLeft: 66 },
-
     brandFooter: { alignItems: 'center', gap: 10, paddingVertical: 24 },
     brandLogoBox: {
       backgroundColor: colors.primary,

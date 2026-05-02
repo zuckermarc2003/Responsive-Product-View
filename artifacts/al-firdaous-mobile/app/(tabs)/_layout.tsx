@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppIcon } from "@/components/AppIcon";
 import { useCart } from "@/context/CartContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { useColors } from "@/hooks/useColors";
 
 function CartTabIcon({ color, focused }: { color: string; focused: boolean }) {
@@ -72,6 +73,7 @@ function ClassicTabLayout() {
   const colors = useColors();
   const colorScheme = useColorScheme();
   const insets = useSafeAreaInsets();
+  const { t } = useLanguage();
   const isDark = colorScheme === "dark";
   const isIOS = Platform.OS === "ios";
   const isAndroid = Platform.OS === "android";
@@ -111,7 +113,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Accueil",
+          title: t.tabHome,
           tabBarIcon: ({ color, focused }) =>
             isIOS ? (
               <SymbolView name={focused ? "house.fill" : "house"} tintColor={color} size={24} />
@@ -123,7 +125,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="catalog"
         options={{
-          title: "Boutique",
+          title: t.tabCatalog,
           tabBarIcon: ({ color, focused }) =>
             isIOS ? (
               <SymbolView name={focused ? "square.grid.2x2.fill" : "square.grid.2x2"} tintColor={color} size={24} />
@@ -135,14 +137,14 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="cart"
         options={{
-          title: "Panier",
+          title: t.tabCart,
           tabBarIcon: ({ color, focused }) => <CartTabIcon color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="wishlist"
         options={{
-          title: "Favoris",
+          title: t.tabWishlist,
           tabBarIcon: ({ color, focused }) =>
             isIOS ? (
               <SymbolView name={focused ? "heart.fill" : "heart"} tintColor={color} size={24} />
@@ -154,7 +156,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profil",
+          title: t.tabProfile,
           tabBarIcon: ({ color, focused }) =>
             isIOS ? (
               <SymbolView name={focused ? "person.fill" : "person"} tintColor={color} size={24} />

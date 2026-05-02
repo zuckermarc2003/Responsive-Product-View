@@ -171,19 +171,10 @@ function applyClientFilters(products: Product[], filters: ProductFilters): Produ
 export async function fetchProducts(filters: ProductFilters = {}): Promise<Product[]> {
   if (!BASE_URL) return applyMockFilters(PRODUCTS, filters);
   try {
-    let raw: ApiProduct[];
-
-    if (filters.category && filters.category !== "all") {
-      // Use the type-filtered endpoint → { "products": [...] }
-      const data = await httpGet<FilteredProductsResponse>(
-        `/products/get?product_type=${encodeURIComponent(filters.category)}`
-      );
-      raw = parseFilteredProducts(data);
-    } else {
-      // All products → { "products": { "Shoe": [...], ... } }
-      raw = await getAllProductsRaw();
-    }
-
+    // Always fetch the full list (cached in memory) and filter client-side.
+    // This avoids CORS issues with the category endpoint and ensures all
+    // sections on the home screen filter consistently.
+    const raw = await getAllProductsRaw();
     return applyClientFilters(raw.map(normalizeProduct), filters);
   } catch (e) {
     console.warn("[api] fetchProducts failed, using mock data:", e);

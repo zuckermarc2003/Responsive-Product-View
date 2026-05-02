@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProductCard } from '@/components/ProductCard';
 import { SkeletonCard } from '@/components/SkeletonCard';
+import { useLanguage } from '@/context/LanguageContext';
 import { useColors } from '@/hooks/useColors';
 import { useProducts } from '@/hooks/useProducts';
 import { CATEGORIES } from '@/constants/data';
@@ -21,18 +22,12 @@ import { Product } from '@/types';
 
 type SortKey = 'default' | 'price_asc' | 'price_desc' | 'rating';
 
-const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-  { key: 'default', label: 'Par défaut' },
-  { key: 'price_asc', label: 'Prix croissant' },
-  { key: 'price_desc', label: 'Prix décroissant' },
-  { key: 'rating', label: 'Mieux notés' },
-];
-
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function CatalogScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { t } = useLanguage();
   const [query, setQuery] = useState('');
   const [selectedCat, setSelectedCat] = useState('all');
   const [sort, setSort] = useState<SortKey>('default');
@@ -42,6 +37,21 @@ export default function CatalogScreen() {
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const cardWidth = (SCREEN_WIDTH - 48) / 2;
   const styles = makeStyles(colors, topPad);
+
+  const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+    { key: 'default', label: t.sortDefault },
+    { key: 'price_asc', label: t.sortPriceAsc },
+    { key: 'price_desc', label: t.sortPriceDesc },
+    { key: 'rating', label: t.sortRating },
+  ];
+
+  const catLabels: Record<string, string> = {
+    all: t.catAll,
+    Shoe: t.catShoe,
+    Sandal: t.catSandal,
+    Shirt: t.catShirt,
+    Pant: t.catPant,
+  };
 
   const { data: products = [], isLoading, error, refetch } = useProducts({
     category: selectedCat,
@@ -60,10 +70,10 @@ export default function CatalogScreen() {
     <View style={styles.container}>
       {/* ── Header ── */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Catalogue</Text>
+        <Text style={styles.headerTitle}>{t.catalogue}</Text>
         <Pressable style={styles.sortBtn} onPress={() => setShowSort(v => !v)}>
           <AppIcon name="options-outline" size={20} color={colors.primary} />
-          <Text style={styles.sortBtnText}>Trier</Text>
+          <Text style={styles.sortBtnText}>{t.sort}</Text>
         </Pressable>
       </View>
 
@@ -92,7 +102,7 @@ export default function CatalogScreen() {
           style={styles.searchInput}
           value={query}
           onChangeText={setQuery}
-          placeholder="Rechercher un produit..."
+          placeholder={t.searchPlaceholder}
           placeholderTextColor={colors.mutedForeground}
           returnKeyType="search"
         />
@@ -113,7 +123,9 @@ export default function CatalogScreen() {
               style={[styles.catPill, active && styles.catPillActive]}
               onPress={() => setSelectedCat(cat.key)}
             >
-              <Text style={[styles.catPillText, active && styles.catPillTextActive]}>{cat.label}</Text>
+              <Text style={[styles.catPillText, active && styles.catPillTextActive]}>
+                {catLabels[cat.key] ?? cat.label}
+              </Text>
             </Pressable>
           );
         })}
@@ -122,14 +134,14 @@ export default function CatalogScreen() {
           onPress={() => setPromoOnly(v => !v)}
         >
           <AppIcon name="flash" size={13} color={promoOnly ? '#fff' : colors.promoBadge} />
-          <Text style={[styles.catPillText, promoOnly && styles.catPillTextActive]}>Promos</Text>
+          <Text style={[styles.catPillText, promoOnly && styles.catPillTextActive]}>{t.promos}</Text>
         </Pressable>
       </ScrollView>
 
       {/* ── Results count ── */}
       {!isLoading && (
         <View style={styles.resultRow}>
-          <Text style={styles.resultCount}>{products.length} produit{products.length > 1 ? 's' : ''}</Text>
+          <Text style={styles.resultCount}>{t.productCount(products.length)}</Text>
         </View>
       )}
 
@@ -141,10 +153,10 @@ export default function CatalogScreen() {
       ) : error ? (
         <View style={styles.errorContainer}>
           <AppIcon name="wifi-outline" size={48} color={colors.border} />
-          <Text style={styles.errorTitle}>Erreur de connexion</Text>
-          <Text style={styles.errorText}>Impossible de charger les produits.</Text>
+          <Text style={styles.errorTitle}>{t.connectionError}</Text>
+          <Text style={styles.errorText}>{t.loadingError}</Text>
           <Pressable style={[styles.retryBtn, { backgroundColor: colors.primary }]} onPress={() => refetch()}>
-            <Text style={styles.retryBtnText}>Réessayer</Text>
+            <Text style={styles.retryBtnText}>{t.retry}</Text>
           </Pressable>
         </View>
       ) : (
@@ -159,8 +171,8 @@ export default function CatalogScreen() {
           ListEmptyComponent={
             <View style={styles.empty}>
               <AppIcon name="search-outline" size={48} color={colors.border} />
-              <Text style={styles.emptyTitle}>Aucun produit trouvé</Text>
-              <Text style={styles.emptyText}>Essayez un autre terme de recherche</Text>
+              <Text style={styles.emptyTitle}>{t.noProducts}</Text>
+              <Text style={styles.emptyText}>{t.trySearch}</Text>
             </View>
           }
           ListFooterComponent={<View style={{ height: Platform.OS === 'web' ? 34 : insets.bottom + 80 }} />}

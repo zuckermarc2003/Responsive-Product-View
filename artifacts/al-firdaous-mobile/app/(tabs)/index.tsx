@@ -1,6 +1,6 @@
 import { AppIcon } from '@/components/AppIcon';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -17,8 +17,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProductCard } from '@/components/ProductCard';
 import { SkeletonCard } from '@/components/SkeletonCard';
 import { useCart } from '@/context/CartContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { useColors } from '@/hooks/useColors';
-import { useNewArrivals, useOnSale, useProducts } from '@/hooks/useProducts';
+import { useProducts } from '@/hooks/useProducts';
 import { CATEGORIES } from '@/constants/data';
 import { Product } from '@/types';
 
@@ -26,11 +27,28 @@ export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { itemCount } = useCart();
+  const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  const { data: newArrivals = [], isLoading: loadingNew } = useNewArrivals();
-  const { data: onSale = [], isLoading: loadingSale } = useOnSale();
-  const { data: allProducts = [], isLoading: loadingAll } = useProducts({ category: selectedCategory });
+  // Single fetch — all filtering is done client-side so every section
+  // (Nouveautés, En Promotion, grid) reacts to the category pill together.
+  const { data: allProducts = [], isLoading } = useProducts();
+
+  const catLabels: Record<string, string> = {
+    all: t.catAll,
+    Shoe: t.catShoe,
+    Sandal: t.catSandal,
+    Shirt: t.catShirt,
+    Pant: t.catPant,
+  };
+
+  const filtered = useMemo(() => {
+    if (selectedCategory === 'all') return allProducts;
+    return allProducts.filter(p => p.product_type === selectedCategory);
+  }, [allProducts, selectedCategory]);
+
+  const newArrivals = useMemo(() => filtered.filter(p => p.isNew), [filtered]);
+  const onSale = useMemo(() => filtered.filter(p => p.promo > 0), [filtered]);
 
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const styles = makeStyles(colors, topPad);
@@ -76,11 +94,11 @@ export default function HomeScreen() {
             resizeMode="cover"
           />
           <View style={styles.heroOverlay}>
-            <Text style={styles.heroLabel}>NOUVELLE COLLECTION</Text>
-            <Text style={styles.heroTitle}>Été 2025</Text>
-            <Text style={styles.heroSub}>Jusqu'à 45% de réduction</Text>
+            <Text style={styles.heroLabel}>{t.newCollection}</Text>
+            <Text style={styles.heroTitle}>{t.heroCta}</Text>
+            <Text style={styles.heroSub}>{t.heroSub}</Text>
             <Pressable style={styles.heroBtn} onPress={() => setSelectedCategory('Shoe')}>
-              <Text style={styles.heroBtnText}>Découvrir</Text>
+              <Text style={styles.heroBtnText}>{t.discover}</Text>
               <AppIcon name="arrow-forward" size={14} color="#fff" />
             </Pressable>
           </View>
@@ -88,7 +106,8 @@ export default function HomeScreen() {
 
         {/* ── Category Pills ── */}
         <View style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>Catégories</Text>
+          <Text style={styles.sectionTitle}>{t.categories}</Text>
+          {isLoading && <ActivityIndicator size="small" color={colors.primary} />}
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
           {CATEGORIES.map(cat => {
@@ -100,7 +119,7 @@ export default function HomeScreen() {
                 onPress={() => setSelectedCategory(cat.key)}
               >
                 <Text style={[styles.categoryPillText, active && styles.categoryPillTextActive]}>
-                  {cat.label}
+                  {catLabels[cat.key] ?? cat.label}
                 </Text>
               </Pressable>
             );
@@ -108,72 +127,79 @@ export default function HomeScreen() {
         </ScrollView>
 
         {/* ── New Arrivals ── */}
-        <View style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>Nouveautés</Text>
-          <Pressable onPress={() => router.push('/(tabs)/catalog' as any)}>
-            <Text style={styles.seeAll}>Voir tout</Text>
-          </Pressable>
-        </View>
-        {loadingNew ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
-            {[1, 2, 3].map(i => <SkeletonCard key={i} width={CARD_WIDTH} />)}
-          </ScrollView>
-        ) : (
-          <FlatList
-            data={newArrivals}
-            horizontal
-            keyExtractor={item => item.id}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}
-            renderItem={({ item }) => <ProductCard product={item} variant="carousel" />}
-            ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
-            scrollEnabled={newArrivals.length > 0}
-          />
+        {newArrivals.length > 0 && (
+          <>
+            <View style={styles.sectionRow}>
+              <Text style={styles.sectionTitle}>{t.newArrivals}</Text>
+              <Pressable onPress={() => router.push('/(tabs)/catalog' as any)}>
+                <Text style={styles.seeAll}>{t.seeAll}</Text>
+              </Pressable>
+            </View>
+            {isLoading ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
+                {[1, 2, 3].map(i => <SkeletonCard key={i} width={CARD_WIDTH} />)}
+              </ScrollView>
+            ) : (
+              <FlatList
+                data={newArrivals}
+                horizontal
+                keyExtractor={item => item.id}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalList}
+                renderItem={({ item }) => <ProductCard product={item} variant="carousel" />}
+                ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
+                scrollEnabled={newArrivals.length > 0}
+              />
+            )}
+          </>
         )}
 
         {/* ── Promo Banner ── */}
         <Pressable style={styles.promoBanner} onPress={() => setSelectedCategory('Shoe')}>
           <AppIcon name="flash" size={20} color="#fff" />
-          <Text style={styles.promoBannerText}>Soldes — Jusqu'à 45% sur les chaussures</Text>
+          <Text style={styles.promoBannerText}>{t.salesBanner}</Text>
           <AppIcon name="chevron-forward" size={18} color="rgba(255,255,255,0.8)" />
         </Pressable>
 
         {/* ── On Sale ── */}
-        <View style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>En Promotion</Text>
-          <Pressable onPress={() => router.push('/(tabs)/catalog' as any)}>
-            <Text style={styles.seeAll}>Voir tout</Text>
-          </Pressable>
-        </View>
-        {loadingSale ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
-            {[1, 2, 3].map(i => <SkeletonCard key={i} width={CARD_WIDTH} />)}
-          </ScrollView>
-        ) : (
-          <FlatList
-            data={onSale}
-            horizontal
-            keyExtractor={item => item.id}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}
-            renderItem={({ item }) => <ProductCard product={item} variant="carousel" />}
-            ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
-            scrollEnabled={onSale.length > 0}
-          />
+        {onSale.length > 0 && (
+          <>
+            <View style={styles.sectionRow}>
+              <Text style={styles.sectionTitle}>{t.onSale}</Text>
+              <Pressable onPress={() => router.push('/(tabs)/catalog' as any)}>
+                <Text style={styles.seeAll}>{t.seeAll}</Text>
+              </Pressable>
+            </View>
+            {isLoading ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
+                {[1, 2, 3].map(i => <SkeletonCard key={i} width={CARD_WIDTH} />)}
+              </ScrollView>
+            ) : (
+              <FlatList
+                data={onSale}
+                horizontal
+                keyExtractor={item => item.id}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalList}
+                renderItem={({ item }) => <ProductCard product={item} variant="carousel" />}
+                ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
+                scrollEnabled={onSale.length > 0}
+              />
+            )}
+          </>
         )}
 
         {/* ── Products grid ── */}
         <View style={styles.sectionRow}>
           <Text style={styles.sectionTitle}>
             {selectedCategory === 'all'
-              ? 'Tous les Produits'
-              : CATEGORIES.find(c => c.key === selectedCategory)?.label ?? 'Produits'}
+              ? t.allProducts
+              : catLabels[selectedCategory] ?? selectedCategory}
           </Text>
-          {loadingAll && <ActivityIndicator size="small" color={colors.primary} />}
         </View>
 
         <View style={styles.grid}>
-          {allProducts.map(product => (
+          {filtered.map((product: Product) => (
             <ProductCard key={product.id} product={product} variant="grid" />
           ))}
         </View>
@@ -196,7 +222,6 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number) =>
       alignItems: 'center',
       justifyContent: 'space-between',
     },
-    headerLogo: { flexDirection: 'row', alignItems: 'center', gap: 10 },
     logoWrap: { flex: 1, alignItems: 'flex-start' },
     logoImage: { height: 34, width: 148 },
     headerActions: { flexDirection: 'row', gap: 4 },
