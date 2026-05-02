@@ -10,6 +10,7 @@ export type IconName =
   | 'search' | 'search-outline'
   | 'star' | 'star-outline' | 'star-half'
   | 'checkmark-circle' | 'checkmark-circle-outline'
+  | 'checkmark' | 'close-circle' | 'remove'
   | 'chevron-forward' | 'chevron-back' | 'chevron-down'
   | 'close' | 'add'
   | 'arrow-forward' | 'arrow-back'
@@ -20,7 +21,7 @@ export type IconName =
   | 'call-outline'
   | 'logo-instagram'
   | 'document-text-outline'
-  | 'shield-outline'
+  | 'shield-outline' | 'shield-checkmark-outline'
   | 'information-circle-outline'
   | 'trash-outline'
   | 'bag-check-outline' | 'bag-outline'
@@ -30,7 +31,10 @@ export type IconName =
   | 'alert-circle-outline'
   | 'refresh-outline'
   | 'wifi-outline'
-  | 'eye-outline' | 'eye-off-outline';
+  | 'eye-outline' | 'eye-off-outline'
+  | 'flash' | 'flash-outline'
+  | 'options-outline'
+  | 'car-outline';
 
 interface Props {
   name: IconName;
@@ -364,7 +368,7 @@ export function AppIcon({ name, size = 24, color = '#000', style }: Props) {
       );
 
     // ── REMOVE (minus) ────────────────────────────────
-    case 'remove' as IconName:
+    case 'remove':
       return (
         <Svg width={s} height={s} viewBox={vb} style={style}>
           <Path {...strokeProps} d="M20 12H4" />
@@ -372,7 +376,7 @@ export function AppIcon({ name, size = 24, color = '#000', style }: Props) {
       );
 
     // ── CHECKMARK ─────────────────────────────────────
-    case 'checkmark' as IconName:
+    case 'checkmark':
       return (
         <Svg width={s} height={s} viewBox={vb} style={style}>
           <Path {...strokeProps} d="M5 13l4 4L19 7" />
@@ -380,7 +384,7 @@ export function AppIcon({ name, size = 24, color = '#000', style }: Props) {
       );
 
     // ── CLOSE-CIRCLE ──────────────────────────────────
-    case 'close-circle' as IconName:
+    case 'close-circle':
       return (
         <Svg width={s} height={s} viewBox={vb} style={style}>
           <Path {...strokeProps} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -388,8 +392,8 @@ export function AppIcon({ name, size = 24, color = '#000', style }: Props) {
       );
 
     // ── FLASH / LIGHTNING ─────────────────────────────
-    case 'flash' as IconName:
-    case 'flash-outline' as IconName:
+    case 'flash':
+    case 'flash-outline':
       return (
         <Svg width={s} height={s} viewBox={vb} style={style}>
           <Path
@@ -400,7 +404,7 @@ export function AppIcon({ name, size = 24, color = '#000', style }: Props) {
       );
 
     // ── SHIELD-CHECKMARK ──────────────────────────────
-    case 'shield-checkmark-outline' as IconName:
+    case 'shield-checkmark-outline':
       return (
         <Svg width={s} height={s} viewBox={vb} style={style}>
           <Path {...strokeProps} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -408,7 +412,7 @@ export function AppIcon({ name, size = 24, color = '#000', style }: Props) {
       );
 
     // ── CAR / DELIVERY ────────────────────────────────
-    case 'car-outline' as IconName:
+    case 'car-outline':
       return (
         <Svg width={s} height={s} viewBox={vb} style={style}>
           <Path {...strokeProps} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -417,7 +421,7 @@ export function AppIcon({ name, size = 24, color = '#000', style }: Props) {
       );
 
     // ── OPTIONS / SLIDERS ─────────────────────────────
-    case 'options-outline' as IconName:
+    case 'options-outline':
       return (
         <Svg width={s} height={s} viewBox={vb} style={style}>
           <Path {...strokeProps} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />

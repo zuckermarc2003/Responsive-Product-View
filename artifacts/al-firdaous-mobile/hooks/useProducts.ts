@@ -1,13 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ProductFilters,
+  checkOrder,
   fetchNewArrivals,
   fetchOnSale,
   fetchProduct,
   fetchProducts,
   fetchRelated,
   fetchReviews,
+  submitReview,
 } from "@/lib/api";
+import { AddReviewPayload } from "@/types";
 
 export function useProducts(filters: ProductFilters = {}) {
   return useQuery({
@@ -56,6 +59,27 @@ export function useReviews(productId: string) {
     queryKey: ["reviews", productId],
     queryFn: () => fetchReviews(productId),
     enabled: !!productId,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
+export function useAddReview(productId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: AddReviewPayload) => submitReview(payload),
+    onSuccess: () => {
+      // Invalidate reviews cache so the new review appears immediately
+      queryClient.invalidateQueries({ queryKey: ["reviews", productId] });
+    },
+  });
+}
+
+export function useOrderStatus(orderId: string) {
+  return useQuery({
+    queryKey: ["order", orderId],
+    queryFn: () => checkOrder(orderId),
+    enabled: !!orderId,
+    staleTime: 1000 * 30, // refresh every 30s for order status
+    retry: 1,
   });
 }
