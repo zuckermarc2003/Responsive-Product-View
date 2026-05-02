@@ -19,9 +19,8 @@
 }
 .react-multi-carousel-list {
   padding-bottom: 52px; /* room for dot indicators */
-  overflow: visible !important;
+  overflow: hidden !important; /* MUST be hidden — visible lets neighbouring page elements bleed through */
 }
-/* Clip overflow at the list wrapper, not the list itself */
 .productCarousel .react-multi-carousel-track {
   will-change: transform;
 }
@@ -266,22 +265,32 @@
 .carsl-see-all {
   display: flex;
   justify-content: center;
-  margin-top: 8px;
+  margin-top: 12px;
+  margin-bottom: 8px;
 }
 
-.carsl-see-all .btn-outline-secondary {
-  padding: 10px 32px !important;
+/* Targets any Bootstrap btn variant — works with .btn, .btn-outline-secondary, etc. */
+.carsl-see-all .btn,
+.carsl-see-all button {
+  padding: 11px 36px !important;
   border: 1.5px solid #0d6efd !important;
   color: #0d6efd !important;
   border-radius: 40px !important;
-  font-size: 0.75rem !important;
+  font-size: 0.78rem !important;
   font-weight: 700 !important;
   letter-spacing: 0.08em !important;
   text-transform: uppercase !important;
   background: transparent !important;
-  transition: background 0.2s ease, color 0.2s ease !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transition: background 0.22s ease, color 0.22s ease !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
 }
-.carsl-see-all .btn-outline-secondary:hover {
+.carsl-see-all .btn:hover,
+.carsl-see-all button:hover {
   background: #0d6efd !important;
   color: #ffffff !important;
 }
@@ -302,11 +311,26 @@
   letter-spacing: -0.01em;
 }
 
-.HomeTitleIconL { color: #0d6efd; animation: walkLeft 3s ease-in-out infinite; position: relative; }
-.HomeTitleIconR { color: #0d6efd; animation: walkRight 3s ease-in-out infinite; position: relative; }
+/* Bounce vertically — safe for both LTR and RTL, no overlap with adjacent text */
+.HomeTitleIconL {
+  color: #0d6efd;
+  display: inline-block;
+  animation: iconBounceL 1.6s ease-in-out infinite;
+}
+.HomeTitleIconR {
+  color: #0d6efd;
+  display: inline-block;
+  animation: iconBounceR 1.6s ease-in-out infinite;
+}
 
-@keyframes walkLeft  { 0%,100% { left: 0 } 50% { left: -32px } }
-@keyframes walkRight { 0%,100% { left: 0 } 50% { left:  32px } }
+@keyframes iconBounceL {
+  0%, 100% { transform: translateY(0)    rotate(0deg); }
+  50%       { transform: translateY(-6px) rotate(-12deg); }
+}
+@keyframes iconBounceR {
+  0%, 100% { transform: translateY(0)    rotate(0deg); }
+  50%       { transform: translateY(-6px) rotate(12deg); }
+}
 
 /* ── Responsive ──────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
