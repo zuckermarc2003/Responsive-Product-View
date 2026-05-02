@@ -342,46 +342,65 @@ export function HomePage() {
       </div>
 
       {/* ── Footer ── */}
-      <footer style={{ background: "#111827", padding: "36px 24px 20px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 36, marginBottom: 28 }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 9, background: "#0d6efd", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Footprints size={17} color="#fff" />
-                </div>
-                <span style={{ color: "#fff", fontWeight: 800, fontSize: 13 }}>AL-FURQA STORE</span>
+      <footer style={{ background: "#111827", paddingTop: 48 }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 28px", display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 40, alignItems: "start" }}>
+
+          {/* Brand column */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {/* Logo placeholder */}
+            <div style={{ width: 64, height: 64, borderRadius: 14, background: "#0d6efd", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Footprints size={32} color="#fff" />
+            </div>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: "0.01em" }}>AL FIRDAOUS STORE</p>
+            <p style={{ margin: 0, fontSize: 12, color: "#9ca3af", lineHeight: 1.65, maxWidth: 240 }}>
+              Premium footwear crafted for comfort and style. Serving Morocco with quality since 2018.
+            </p>
+            {/* Social pills */}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <div style={{ background: "#3b5998", borderRadius: 999, height: 32, padding: "0 14px", display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "#fff", cursor: "pointer" }}>
+                <Facebook size={13} /> Facebook
               </div>
-              <p style={{ margin: "0 0 14px", fontSize: 12, color: "#9ca3af", lineHeight: 1.6, maxWidth: 220 }}>
-                Premium footwear crafted for comfort and style. Serving Morocco since 2018.
-              </p>
-              <div style={{ display: "flex", gap: 8 }}>
-                {[Instagram, Facebook, Twitter].map((Icon, i) => (
-                  <div key={i} style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,.07)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                    <Icon size={14} color="#9ca3af" />
-                  </div>
-                ))}
+              <div style={{ background: "linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)", borderRadius: 999, height: 32, padding: "0 14px", display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "#fff", cursor: "pointer" }}>
+                <Instagram size={13} /> Instagram
               </div>
             </div>
+          </div>
+
+          {/* Policies column */}
+          <div>
+            <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6b7280" }}>Policies</p>
+            {["General Terms of Use", "Privacy Policy"].map((l, i) => (
+              <a key={i} href="#" style={{ display: "block", color: "#9ca3af", fontSize: 13, marginBottom: 10, textDecoration: "none", transition: "color .15s ease" }}
+                onMouseEnter={e => (e.currentTarget.style.color = "#0d6efd")}
+                onMouseLeave={e => (e.currentTarget.style.color = "#9ca3af")}>
+                {l}
+              </a>
+            ))}
+          </div>
+
+          {/* Contact column */}
+          <div>
+            <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6b7280" }}>Contact Us</p>
             {[
-              { title: "Shop", links: ["Men's Shoes", "Sandals", "Sport", "Sale"] },
-              { title: "Company", links: ["About", "Contact", "Blog"] },
-              { title: "Support", links: ["FAQ", "Returns", "Track Order"] },
-            ].map((col, i) => (
-              <div key={i}>
-                <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b7280" }}>{col.title}</p>
-                {col.links.map((l, j) => (
-                  <a key={j} href="#" style={{ display: "block", color: "#9ca3af", fontSize: 12, marginBottom: 7, textDecoration: "none" }}>{l}</a>
-                ))}
+              { label: "Phone", value: "+212 600 000 000" },
+              { label: "Email", value: "alfirdaousstore.services@gmail.com" },
+            ].map((item, i) => (
+              <div key={i} style={{ marginBottom: 10 }}>
+                <p style={{ margin: "0 0 2px", fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b7280" }}>{item.label}</p>
+                <a href="#" style={{ color: "#9ca3af", fontSize: 12, textDecoration: "none" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "#0d6efd")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "#9ca3af")}>
+                  {item.value}
+                </a>
               </div>
             ))}
           </div>
-          <div style={{ borderTop: "1px solid #1f2937", paddingTop: 18, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <p style={{ margin: 0, fontSize: 11, color: "#6b7280" }}>© 2025 AL-FURQA STORE. All rights reserved.</p>
-            <div style={{ display: "flex", gap: 14 }}>
-              {["Privacy", "Terms"].map((l, i) => <a key={i} href="#" style={{ color: "#6b7280", fontSize: 11, textDecoration: "none" }}>{l}</a>)}
-            </div>
-          </div>
+        </div>
+
+        {/* Divider + copyright */}
+        <div style={{ height: 1, background: "linear-gradient(90deg,transparent,#1f2937,transparent)", margin: "36px 28px 0" }} />
+        <div style={{ padding: "18px 28px", display: "flex", justifyContent: "center", alignItems: "center", gap: 5, fontSize: 12, color: "#6b7280", fontWeight: 500, letterSpacing: "0.04em" }}>
+          AL FIRDAOUS STORE © 2025
         </div>
       </footer>
     </div>
