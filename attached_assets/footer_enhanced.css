@@ -8,9 +8,12 @@
   background: #111827 !important;
   color: #e5e7eb !important;
   width: 100%;
+  max-width: 100%;          /* prevent footer from being wider than viewport */
+  overflow: hidden;         /* clip any child that bleeds past the edge */
   padding: 48px 0 0 !important;
   margin: 0 !important;
   font-family: inherit;
+  box-sizing: border-box;
 }
 
 /* ── Inner container (max-width centering) ──────────────────── */

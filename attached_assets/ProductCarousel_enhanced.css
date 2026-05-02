@@ -16,11 +16,32 @@
    Margin on the card itself overflows the slide container and causes overlap.   */
 .react-multi-carousel-item {
   padding: 0 8px;      /* 8px on each side = 16px gap between cards */
+  box-sizing: border-box;
 }
+
+/*
+  The card is wrapped in <motion.div> which has no width of its own.
+  Without width:100%, the motion wrapper doesn't fill the carousel item slot,
+  leaving a visible right-side gap on mobile.
+*/
+.react-multi-carousel-item > div {
+  width: 100%;
+}
+
 .react-multi-carousel-list {
   padding-bottom: 52px; /* room for dot indicators */
   overflow: hidden !important; /* MUST be hidden — visible lets neighbouring page elements bleed through */
 }
+
+/*
+  overflow:hidden on the Carousel root div (.productCarousel) clips anything
+  that bleeds past the track boundary. This is the final guard against the
+  right-side horizontal-scroll artifact visible on mobile RTL pages.
+*/
+.productCarousel {
+  overflow: hidden;
+}
+
 .productCarousel .react-multi-carousel-track {
   will-change: transform;
 }
@@ -347,6 +368,11 @@
 }
 
 @media (max-width: 768px) {
+  /* Reduce carousel item padding on mobile — prevents right-side overflow gap */
+  .react-multi-carousel-item {
+    padding: 0 4px;
+  }
+
   .productCImgCont {
     padding-top: 0 !important;
     height: 200px;
