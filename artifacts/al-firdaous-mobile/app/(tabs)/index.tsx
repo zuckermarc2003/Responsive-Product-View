@@ -43,11 +43,14 @@ export default function HomeScreen() {
 
       {/* ── Header ── */}
       <View style={styles.header}>
-        <Image
-          source={{ uri: 'https://www.alfirdaousstore.com/assets/WHITE%20FIRDAOUS%20STORE-DgnBjEdy.png' }}
-          style={styles.logoImage}
-          resizeMode="contain"
-        />
+        <View style={styles.logoWrap}>
+          <Image
+            source={{ uri: 'https://www.alfirdaousstore.com/assets/WHITE%20FIRDAOUS%20STORE-DgnBjEdy.png' }}
+            style={styles.logoImage}
+            resizeMode="contain"
+            onError={() => {}}
+          />
+        </View>
         <View style={styles.headerActions}>
           <Pressable style={styles.headerIcon} onPress={() => router.push('/(tabs)/catalog' as any)}>
             <Ionicons name="search-outline" size={22} color="#fff" />
@@ -194,7 +197,8 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number) =>
       justifyContent: 'space-between',
     },
     headerLogo: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    logoImage: { height: 36, width: 160 },
+    logoWrap: { flex: 1, alignItems: 'flex-start' },
+    logoImage: { height: 34, width: 148 },
     headerActions: { flexDirection: 'row', gap: 4 },
     headerIcon: { padding: 8, position: 'relative' },
     cartBadge: {

@@ -183,7 +183,9 @@ function ClassicTabLayout() {
 }
 
 export default function TabLayout() {
-  if (isLiquidGlassAvailable()) {
+  // NativeTabLayout uses iOS-26-only APIs (NativeTabs, SymbolView).
+  // Guard with Platform.OS to prevent it from ever rendering on Android/web.
+  if (Platform.OS === "ios" && isLiquidGlassAvailable()) {
     return <NativeTabLayout />;
   }
   return <ClassicTabLayout />;

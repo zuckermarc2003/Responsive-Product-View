@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCart } from '@/context/CartContext';
+import { THEMES, useTheme } from '@/context/ThemeContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useColors } from '@/hooks/useColors';
 
@@ -58,6 +59,45 @@ const rowStyles = StyleSheet.create({
   label: { flex: 1, fontSize: 15, fontFamily: 'Inter_500Medium' },
   right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   value: { fontSize: 14, fontFamily: 'Inter_400Regular' },
+});
+
+function ThemeSelector() {
+  const colors = useColors();
+  const { theme, setTheme } = useTheme();
+  return (
+    <View style={[themeStyles.section, { marginHorizontal: 16, marginBottom: 12 }]}>
+      <Text style={[themeStyles.title, { color: colors.foreground }]}>Thème</Text>
+      <View style={[themeStyles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        {THEMES.map((t, i) => (
+          <Pressable
+            key={t.id}
+            style={[
+              themeStyles.row,
+              i < THEMES.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border },
+            ]}
+            onPress={() => setTheme(t.id)}
+          >
+            <View style={[themeStyles.swatch, { backgroundColor: t.primary }]} />
+            <Text style={[themeStyles.label, { color: colors.foreground }]}>{t.label}</Text>
+            <Text style={[themeStyles.sub, { color: colors.mutedForeground }]}>{t.primary}</Text>
+            {theme.id === t.id && (
+              <Ionicons name="checkmark-circle" size={20} color={t.primary} />
+            )}
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const themeStyles = StyleSheet.create({
+  section: {},
+  title: { fontSize: 13, fontFamily: 'Inter_600SemiBold', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.8, opacity: 0.6 },
+  card: { borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
+  row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, gap: 12 },
+  swatch: { width: 28, height: 28, borderRadius: 14 },
+  label: { flex: 1, fontSize: 15, fontFamily: 'Inter_600SemiBold' },
+  sub: { fontSize: 12, fontFamily: 'Inter_400Regular' },
 });
 
 export default function ProfileScreen() {
@@ -159,6 +199,9 @@ export default function ProfileScreen() {
             />
           </View>
         </View>
+
+        {/* ── Theme ── */}
+        <ThemeSelector />
 
         {/* ── Legal ── */}
         <View style={styles.section}>
