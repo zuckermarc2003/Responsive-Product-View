@@ -838,19 +838,33 @@ body {
     margin: 12px;
   }
 
+  /*
+    DOM order: <thumbs-swiper> then <main-swiper>.
+    column-reverse shows main image ON TOP (visual first) and thumb strip BELOW.
+    This is the standard mobile product-detail UX.
+  */
   .pd-images {
     width: 100%;
-    flex-direction: column;
+    flex-direction: column-reverse;   /* main image on top, thumbs below */
     height: auto;
     gap: 8px;
   }
 
+  /* Main swiper — explicit CSS height as fallback if JSX inline-style fails */
   .pd-swiper {
     width: 100% !important;
+    height: 260px !important;        /* guard: matches JSX inline style */
     border-radius: 10px;
+    flex-shrink: 0;
   }
 
-  .pd-thumbs { width: 100% !important; }
+  /* Thumbnail strip — horizontal, fixed height */
+  .pd-thumbs {
+    width: 100% !important;
+    height: 68px !important;         /* guard: matches JSX inline style */
+    flex-shrink: 0;
+  }
+
   .pd-thumb  { width: 56px !important; height: 56px !important; }
 
   .pd-info {
