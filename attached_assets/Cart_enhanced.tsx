@@ -156,7 +156,7 @@ const Cart: React.FC = () => {
     const lineTotal = getLineTotal(item.price, item.promo, item.quantity);
 
     return (
-      <div key={index} className="cart-row" dir={isRtl ? 'rtl' : 'ltr'}>
+      <div key={index} className="cart-row">
 
         {/* ── Col 1: image + details (desktop) / image (mobile top-left) ── */}
         <div className="cart-row__product">
@@ -168,7 +168,7 @@ const Cart: React.FC = () => {
               loading="lazy"
             />
           </div>
-          <div className="cart-item-details">
+          <div className="cart-item-details" dir={isRtl ? 'rtl' : 'ltr'}>
             <strong className="cart-item-details__ref">
               {item.category} {item.ref}
             </strong>
@@ -240,7 +240,7 @@ const Cart: React.FC = () => {
   return (
     <>
       <Header />
-      <div className="cart-page" dir={isRtl ? 'rtl' : 'ltr'}>
+      <div className={`cart-page${isRtl ? ' cart-page--rtl' : ''}`}>
 
         {/*
           DOM order: sidebar first, items second.

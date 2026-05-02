@@ -324,6 +324,28 @@
   border-color:     #d0021b;
 }
 
+/* ─── RTL text adjustments ────────────────────────────────────────────────────── */
+/*
+  IMPORTANT: `dir="rtl"` must NEVER be placed on grid or flex layout containers
+  (.cart-row, .cart-page, .cart-sidebar, .cart-items-panel) because it reverses
+  the entire column/item order and causes the deformation seen in the screenshots.
+
+  RTL is handled here exclusively via text-align and direction on text-content
+  elements. The grid layout columns stay in LTR order at all times.
+*/
+
+/* Text alignment for sidebar content in RTL */
+.cart-page--rtl .order-summary__grand-total,
+.cart-page--rtl .order-summary__list-item,
+.cart-page--rtl .currency-bar {
+  direction: rtl;
+}
+
+/* Row total text aligns left in RTL (it's the "end" side) */
+.cart-page--rtl .cart-row__total {
+  align-items: flex-start;
+}
+
 /* ─── Responsive: tablet (800px) — sidebar stacks below items ─────────────────── */
 /*
   KEY FIX: on tablet/mobile the sidebar (order summary) should appear BELOW
