@@ -1,163 +1,96 @@
 /* ─────────────────────────────────────────────────────────────────────────────
-   ProductCarousel — Enhanced Design
+   ProductCarousel — Enhanced Design  (light-theme compatible)
    Drop this into:  src/styles/ProductCarousel.css
    ───────────────────────────────────────────────────────────────────────────── */
 
-/* ── Section wrapper ────────────────────────────────────────────────────────── */
+/* ── Section wrapper ─────────────────────────────────────────────────────────── */
 .productCarousel {
   width: 100%;
-  height: auto;
-  background: linear-gradient(160deg, #0f0f0f 0%, #1a1a2e 100%);
-  padding: 40px 24px 48px;
+  background: #f5f6fa;
+  padding: 0 0 32px;   /* no horizontal padding — carousel handles it */
   margin: 0;
-  position: relative;
 }
 
-/* ── Section header bar ─────────────────────────────────────────────────────── */
-.carsl-item-title {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 0 0 36px;
-  background: transparent;
-  color: inherit;
-  position: relative;
+/* ── react-multi-carousel: give each slide padding so cards don't touch ───────
+   This is the correct way to add gaps between cards in react-multi-carousel.
+   Margin on the card itself overflows the slide container and causes overlap.   */
+.react-multi-carousel-item {
+  padding: 0 8px;      /* 8px on each side = 16px gap between cards */
 }
-
-/* Animated shoe icon – left */
-.HomeTitleIconL {
-  color: #f59e0b;
-  font-size: 1.6rem;
-  position: relative;
-  animation: walkLeft 3s ease-in-out infinite;
-}
-
-/* Animated shoe icon – right */
-.HomeTitleIconR {
-  color: #f59e0b;
-  font-size: 1.6rem;
-  position: relative;
-  animation: walkRight 3s ease-in-out infinite;
-}
-
-@keyframes walkLeft {
-  0%   { left: 0 }
-  50%  { left: -40px }
-  100% { left: 0 }
-}
-@keyframes walkRight {
-  0%   { left: 0 }
-  50%  { left: 40px }
-  100% { left: 0 }
-}
-
-/* Title text */
-.HomeTitle {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.HomeTitle::before {
-  content: attr(data-label);
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #f59e0b;
-}
-
-/* Vertical accent bar beside title */
-.ProductsPromoAnnouncement {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  font-size: 1.6rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #ffffff;
-  padding-bottom: 32px;
-  background: transparent !important;
-  position: relative;
-}
-
-/* ── react-multi-carousel overrides ─────────────────────────────────────────── */
 .react-multi-carousel-list {
-  padding-bottom: 48px; /* room for dots */
+  padding-bottom: 52px; /* room for dot indicators */
+  overflow: visible !important;
+}
+/* Clip overflow at the list wrapper, not the list itself */
+.productCarousel .react-multi-carousel-track {
+  will-change: transform;
 }
 
-/* Dots */
+/* ── Dot indicators ─────────────────────────────────────────────────────────── */
 .react-multi-carousel-dot button {
   width: 8px;
   height: 8px;
-  border: none;
-  background: #333;
+  border: none !important;
+  background: #d1d5db !important;
   border-radius: 4px;
   transition: width 0.25s ease, background 0.25s ease;
 }
 .react-multi-carousel-dot--active button {
-  width: 24px;
-  background: #f59e0b;
+  width: 22px !important;
+  background: #0d6efd !important;
 }
 
-/* Arrow buttons */
+/* ── Arrow buttons ──────────────────────────────────────────────────────────── */
 .react-multiple-carousel__arrow {
   background: transparent !important;
-  border: 1.5px solid #f59e0b !important;
+  border: 1.5px solid #0d6efd !important;
   border-radius: 50% !important;
-  min-width: 42px !important;
-  min-height: 42px !important;
-  transition: background 0.2s ease, color 0.2s ease !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  transition: background 0.2s ease !important;
   z-index: 10;
 }
 .react-multiple-carousel__arrow::before {
-  color: #f59e0b !important;
-  font-size: 14px !important;
+  color: #0d6efd !important;
+  font-size: 13px !important;
 }
 .react-multiple-carousel__arrow:hover {
-  background: rgba(245, 158, 11, 0.15) !important;
+  background: rgba(13, 110, 253, 0.08) !important;
 }
-.react-multiple-carousel__arrow--left  { left: 4px !important; }
-.react-multiple-carousel__arrow--right { right: 4px !important; }
+.react-multiple-carousel__arrow--left  { left: 0 !important; }
+.react-multiple-carousel__arrow--right { right: 0 !important; }
 
-/* ── Product card ───────────────────────────────────────────────────────────── */
+/* ── Product card ────────────────────────────────────────────────────────────── */
 .productCarouselCard {
-  width: 100%;
-  height: auto;
-  margin: 0 8px;
-  background: #1c1c2e;
-  border: 1.5px solid #2a2a3e;
-  border-radius: 16px;
+  /* width is controlled by the carousel slide — DO NOT set width or margin here */
+  background: #ffffff;
+  border-radius: 14px;
   overflow: hidden;
+  border: 1.5px solid #e5e7eb;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   transition:
-    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-    background 0.32s ease,
-    border-color 0.32s ease;
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.28s ease;
   cursor: pointer;
-  text-decoration: none !important;
 }
 
 .productCarouselCard:hover {
-  background: #ffffff;
-  border-color: transparent;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4), 0 0 0 1.5px rgba(245, 158, 11, 0.35);
-  transform: translateY(-8px);
+  transform: translateY(-6px);
+  border-color: #0d6efd;
+  box-shadow: 0 16px 40px rgba(13, 110, 253, 0.14);
 }
 
-/* ── Image container ────────────────────────────────────────────────────────── */
+/* ── Image container ─────────────────────────────────────────────────────────── */
 .productCImgCont {
   width: 100%;
-  padding-top: 75%;          /* 4:3 aspect ratio – no distortion */
+  padding-top: 72%;      /* ~4:3, no distortion */
   position: relative;
   overflow: hidden;
-  background: #111;
+  background: #f3f4f6;
+  border-radius: 0;      /* card already clips */
 }
 
 .productCImgCont img {
@@ -165,65 +98,63 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;         /* cover, not fill — keeps proportions */
-  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  object-fit: cover;     /* COVER — proportions preserved */
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .productCarouselCard:hover .productCImgCont img {
-  transform: scale(1.08);
+  transform: scale(1.06);
 }
 
-/* Gradient overlay on image */
+/* Subtle bottom gradient on image */
 .productCImgCont::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 0%, transparent 50%);
-  transition: opacity 0.3s ease;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.22) 0%, transparent 55%);
   pointer-events: none;
+  transition: opacity 0.3s ease;
 }
 .productCarouselCard:hover .productCImgCont::after {
-  opacity: 0.3;
+  opacity: 0.5;
 }
 
-/* ── Promo badge (positioned on top of image) ───────────────────────────────── */
+/* ── Promo badge ─────────────────────────────────────────────────────────────── */
 .productCPromo {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 10px;
+  right: 10px;
   background: linear-gradient(135deg, #ef4444, #dc2626);
   color: #fff;
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  padding: 4px 10px;
+  padding: 3px 9px;
   border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.45);
   z-index: 2;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
-/* ── Quick-view pill (appears on hover over image) ──────────────────────────── */
+/* ── Quick-view pill (hover reveal) ─────────────────────────────────────────── */
 .productCQuickView {
   position: absolute;
   bottom: 10px;
   left: 50%;
-  transform: translateX(-50%) translateY(16px);
+  transform: translateX(-50%) translateY(10px);
   opacity: 0;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #fff;
-  font-size: 0.7rem;
+  background: rgba(255, 255, 255, 0.92);
+  color: #111827;
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  padding: 6px 18px;
+  padding: 5px 14px;
   border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   white-space: nowrap;
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition: opacity 0.22s ease, transform 0.22s ease;
   pointer-events: none;
   z-index: 3;
 }
@@ -232,97 +163,87 @@
   transform: translateX(-50%) translateY(0);
 }
 
-/* ── Text body ──────────────────────────────────────────────────────────────── */
+/* ── Meta line (category · ref) ─────────────────────────────────────────────── */
 .productCMeta {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #6b7280;
-  margin: 0 0 4px;
-  padding: 16px 16px 0;
-  transition: color 0.25s ease;
-}
-.productCarouselCard:hover .productCMeta {
   color: #9ca3af;
+  margin: 0 0 3px;
+  padding: 14px 14px 0;
 }
 
-.productCInfos1,
-.productCInfos2 {
+/* ── Name lines ──────────────────────────────────────────────────────────────── */
+.productCInfos1 {
   font-size: 0.82rem;
   font-weight: 700;
-  line-height: 1.35;
-  color: #e5e7eb;
+  color: #111827;
   text-transform: capitalize;
-  padding: 0 16px;
-  margin: 0 0 4px;
+  padding: 0 14px;
+  margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  transition: color 0.25s ease;
-}
-.productCarouselCard:hover .productCInfos1,
-.productCarouselCard:hover .productCInfos2 {
-  color: #111827;
 }
 
-/* ── Price block ────────────────────────────────────────────────────────────── */
+.productCInfos2 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  text-transform: capitalize;
+  padding: 2px 14px 0;
+  margin: 0 0 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Price block ─────────────────────────────────────────────────────────────── */
 .productCPrice {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
   gap: 6px;
-  padding: 8px 16px 4px;
+  padding: 4px 14px 0;
 }
 
 .productCPriceP {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 800;
-  color: #34d399;            /* green on dark */
+  color: #16a34a;
   letter-spacing: -0.02em;
   margin: 0;
   line-height: 1.2;
-  transition: color 0.25s ease;
-}
-.productCarouselCard:hover .productCPriceP {
-  color: #059669;            /* darker green on white */
 }
 
 .productCPriceD {
-  font-size: 0.78rem;
-  font-weight: 400;
-  color: #6b7280;
+  font-size: 0.75rem;
+  color: #9ca3af;
   text-decoration: line-through;
   text-decoration-color: #ef4444;
   margin: 0;
-  transition: color 0.25s ease;
-}
-.productCarouselCard:hover .productCPriceD {
-  color: #9ca3af;
 }
 
 .productCDiscount {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: #ef4444;
   margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 2px;
 }
 
-/* ── CTA button ─────────────────────────────────────────────────────────────── */
+/* ── CTA button ──────────────────────────────────────────────────────────────── */
 .productCView {
   width: 100%;
-  padding: 11px 0;
+  padding: 10px 0;
   margin: 12px 0 0;
   border: none;
-  border-top: none;
-  border-radius: 0 0 14px 14px;
-  background: linear-gradient(135deg, #1e1b4b, #312e81);
+  border-radius: 0 0 12px 12px;
+  background: #111827;
   color: #ffffff;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -330,58 +251,68 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  box-shadow: 0 2px 8px rgba(30, 27, 75, 0.4);
-  transition: background 0.22s ease, box-shadow 0.22s ease, color 0.22s ease;
+  gap: 7px;
+  transition: background 0.2s ease;
+  outline: none;
   margin-top: auto;
 }
 .productCView:hover,
 .productCarouselCard:hover .productCView {
-  background: linear-gradient(135deg, #111827, #1f2937);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-  color: #fff;
+  background: #0d6efd;
+  color: #ffffff;
 }
 
-/* ── "See all" browse button ────────────────────────────────────────────────── */
+/* ── "See all" browse button ─────────────────────────────────────────────────── */
 .carsl-see-all {
   display: flex;
   justify-content: center;
-  margin-top: 28px;
+  margin-top: 8px;
 }
 
-.carsl-see-all .btn {
-  padding: 11px 36px;
-  background: transparent;
-  border: 1.5px solid #f59e0b;
-  color: #f59e0b;
-  border-radius: 40px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  transition: background 0.22s ease, color 0.22s ease;
+.carsl-see-all .btn-outline-secondary {
+  padding: 10px 32px !important;
+  border: 1.5px solid #0d6efd !important;
+  color: #0d6efd !important;
+  border-radius: 40px !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  background: transparent !important;
+  transition: background 0.2s ease, color 0.2s ease !important;
 }
-.carsl-see-all .btn:hover {
-  background: #f59e0b;
-  color: #000000;
+.carsl-see-all .btn-outline-secondary:hover {
+  background: #0d6efd !important;
+  color: #ffffff !important;
 }
 
-/* ── Responsive ─────────────────────────────────────────────────────────────── */
+/* ── Section title bar ───────────────────────────────────────────────────────── */
+.ProductsPromoAnnouncement {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  font-size: 1.4rem !important;
+  font-weight: 800 !important;
+  color: #111827 !important;
+  background: #ffffff !important;   /* white — matches site */
+  border-left: 4px solid #0d6efd;
+  padding: 12px 20px !important;
+  margin-bottom: 4px !important;
+  letter-spacing: -0.01em;
+}
+
+.HomeTitleIconL { color: #0d6efd; animation: walkLeft 3s ease-in-out infinite; position: relative; }
+.HomeTitleIconR { color: #0d6efd; animation: walkRight 3s ease-in-out infinite; position: relative; }
+
+@keyframes walkLeft  { 0%,100% { left: 0 } 50% { left: -32px } }
+@keyframes walkRight { 0%,100% { left: 0 } 50% { left:  32px } }
+
+/* ── Responsive ──────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .productCarousel {
-    padding: 28px 12px 40px;
-  }
-  .ProductsPromoAnnouncement {
-    font-size: 1.2rem;
-  }
-}
-
-@media (max-width: 500px) {
+  .productCMeta    { padding: 12px 12px 0; font-size: 0.58rem; }
   .productCInfos1,
-  .productCInfos2 {
-    font-size: 0.78rem;
-  }
-  .productCPriceP {
-    font-size: 1rem;
-  }
+  .productCInfos2  { padding: 0 12px; font-size: 0.78rem; }
+  .productCPrice   { padding: 4px 12px 0; }
+  .productCPriceP  { font-size: 0.95rem; }
 }

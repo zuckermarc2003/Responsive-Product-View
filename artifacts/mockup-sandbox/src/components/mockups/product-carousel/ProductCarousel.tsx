@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, ShoppingBag, ChevronLeft, ChevronRight, Zap } from "lucide-react";
+import { ShoppingBag, Eye, Zap, ChevronLeft, ChevronRight } from "lucide-react";
 
 const products = [
   {
@@ -70,230 +70,151 @@ export function ProductCarousel() {
   const visible = products.slice(offset, offset + VISIBLE);
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(160deg, #0f0f0f 0%, #1a1a2e 100%)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "40px 24px",
-        fontFamily: "'Inter', system-ui, sans-serif",
-      }}
-    >
+    <div style={{
+      minHeight: "100vh",
+      background: "#f5f6fa",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "40px 24px",
+      fontFamily: "'Inter', system-ui, sans-serif",
+    }}>
       <div style={{ width: "100%", maxWidth: 1200 }}>
 
-        {/* ── Section header ─────────────────────────────────── */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 36 }}>
+        {/* ── Section header ── */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div
-              style={{
-                width: 4,
-                height: 40,
-                borderRadius: 4,
-                background: "linear-gradient(180deg, #f59e0b, #ef4444)",
-              }}
-            />
+            <div style={{ width: 4, height: 40, borderRadius: 4, background: "linear-gradient(180deg,#0d6efd,#0a58ca)" }} />
             <div>
-              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#f59e0b" }}>
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#0d6efd" }}>
                 New Collection
               </p>
-              <h2 style={{ margin: 0, fontSize: 28, fontWeight: 800, color: "#ffffff", letterSpacing: "-0.02em" }}>
+              <h2 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: "#111827", letterSpacing: "-0.02em" }}>
                 Men's Shoes
               </h2>
             </div>
           </div>
 
           {/* Nav arrows */}
-          <div style={{ display: "flex", gap: 10 }}>
-            {[{ fn: prev, disabled: offset === 0, icon: <ChevronLeft size={18} /> },
-              { fn: next, disabled: offset >= maxOffset, icon: <ChevronRight size={18} /> }].map(({ fn, disabled, icon }, i) => (
-              <button
-                key={i}
-                onClick={fn}
-                disabled={disabled}
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: "50%",
-                  border: "1.5px solid",
-                  borderColor: disabled ? "#333" : "#f59e0b",
-                  background: disabled ? "transparent" : "rgba(245,158,11,0.1)",
-                  color: disabled ? "#444" : "#f59e0b",
-                  cursor: disabled ? "not-allowed" : "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  transition: "all 0.2s ease",
-                }}
-              >
+          <div style={{ display: "flex", gap: 8 }}>
+            {[
+              { fn: prev, disabled: offset === 0, icon: <ChevronLeft size={18}/> },
+              { fn: next, disabled: offset >= maxOffset, icon: <ChevronRight size={18}/> },
+            ].map(({ fn, disabled, icon }, i) => (
+              <button key={i} onClick={fn} disabled={disabled} style={{
+                width: 40, height: 40, borderRadius: "50%",
+                border: `1.5px solid ${disabled ? "#d1d5db" : "#0d6efd"}`,
+                background: disabled ? "transparent" : "rgba(13,110,253,0.07)",
+                color: disabled ? "#d1d5db" : "#0d6efd",
+                cursor: disabled ? "not-allowed" : "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "all 0.2s ease",
+              }}>
                 {icon}
               </button>
             ))}
           </div>
         </div>
 
-        {/* ── Cards row ──────────────────────────────────────── */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
+        {/* ── Cards row ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
           {visible.map((product) => {
             const hovered = hoveredId === product.id;
             const finalPrice = (product.price * (1 - product.promo * 0.01)).toFixed(2);
             const hasPromo = product.promo > 0;
 
             return (
-              <div
-                key={product.id}
+              <div key={product.id}
                 onMouseEnter={() => setHoveredId(product.id)}
                 onMouseLeave={() => setHoveredId(null)}
                 style={{
-                  background: hovered ? "#ffffff" : "#1c1c2e",
-                  borderRadius: 16,
+                  background: "#ffffff",
+                  borderRadius: 14,
                   overflow: "hidden",
-                  border: `1.5px solid ${hovered ? "transparent" : "#2a2a3e"}`,
+                  border: `1.5px solid ${hovered ? "#0d6efd" : "#e5e7eb"}`,
                   boxShadow: hovered
-                    ? "0 24px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(245,158,11,0.3)"
-                    : "0 4px 16px rgba(0,0,0,0.3)",
-                  transform: hovered ? "translateY(-8px)" : "translateY(0)",
-                  transition: "all 0.32s cubic-bezier(0.22,1,0.36,1)",
+                    ? "0 16px 40px rgba(13,110,253,0.15)"
+                    : "0 2px 12px rgba(0,0,0,0.06)",
+                  transform: hovered ? "translateY(-6px)" : "translateY(0)",
+                  transition: "all 0.28s cubic-bezier(0.22,1,0.36,1)",
                   cursor: "pointer",
                   display: "flex",
                   flexDirection: "column",
-                }}
-              >
-                {/* Image */}
-                <div style={{ position: "relative", paddingTop: "75%", overflow: "hidden", background: "#111" }}>
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      transform: hovered ? "scale(1.08)" : "scale(1)",
-                      transition: "transform 0.5s cubic-bezier(0.22,1,0.36,1)",
-                    }}
-                  />
+                }}>
 
-                  {/* Gradient overlay */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      background: "linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 50%)",
-                      opacity: hovered ? 0.3 : 0.6,
-                      transition: "opacity 0.3s ease",
-                    }}
-                  />
+                {/* Image */}
+                <div style={{ position: "relative", paddingTop: "72%", overflow: "hidden", background: "#f3f4f6" }}>
+                  <img src={product.image} alt={product.name} style={{
+                    position: "absolute", inset: 0, width: "100%", height: "100%",
+                    objectFit: "cover",
+                    transform: hovered ? "scale(1.06)" : "scale(1)",
+                    transition: "transform 0.45s cubic-bezier(0.22,1,0.36,1)",
+                  }} />
+
+                  {/* Overlay */}
+                  <div style={{
+                    position: "absolute", inset: 0,
+                    background: "linear-gradient(to top, rgba(0,0,0,0.25) 0%, transparent 55%)",
+                    opacity: hovered ? 0.5 : 0.7,
+                    transition: "opacity 0.3s",
+                    pointerEvents: "none",
+                  }} />
 
                   {/* Promo badge */}
                   {hasPromo && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: 12,
-                        right: 12,
-                        background: "linear-gradient(135deg, #ef4444, #dc2626)",
-                        color: "#fff",
-                        fontSize: 10,
-                        fontWeight: 800,
-                        letterSpacing: "0.08em",
-                        textTransform: "uppercase",
-                        padding: "4px 10px",
-                        borderRadius: 20,
-                        boxShadow: "0 2px 8px rgba(239,68,68,0.5)",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 3,
-                      }}
-                    >
-                      <Zap size={10} fill="currentColor" />
+                    <div style={{
+                      position: "absolute", top: 10, right: 10,
+                      background: "linear-gradient(135deg,#ef4444,#dc2626)",
+                      color: "#fff", fontSize: 10, fontWeight: 800,
+                      letterSpacing: "0.06em", textTransform: "uppercase",
+                      padding: "3px 9px", borderRadius: 20,
+                      boxShadow: "0 2px 6px rgba(239,68,68,0.45)",
+                      display: "flex", alignItems: "center", gap: 3,
+                    }}>
+                      <Zap size={9} fill="currentColor"/>
                       {product.promo}% OFF
                     </div>
                   )}
 
-                  {/* Quick view on hover */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: 10,
-                      left: "50%",
-                      transform: `translateX(-50%) translateY(${hovered ? 0 : 16}px)`,
-                      opacity: hovered ? 1 : 0,
-                      transition: "all 0.25s ease",
-                      background: "rgba(255,255,255,0.15)",
-                      backdropFilter: "blur(8px)",
-                      border: "1px solid rgba(255,255,255,0.25)",
-                      color: "#fff",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                      padding: "6px 16px",
-                      borderRadius: 20,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    <Eye size={12} /> Quick View
+                  {/* Quick view */}
+                  <div style={{
+                    position: "absolute", bottom: 10, left: "50%",
+                    transform: `translateX(-50%) translateY(${hovered ? 0 : 12}px)`,
+                    opacity: hovered ? 1 : 0,
+                    transition: "all 0.22s ease",
+                    background: "rgba(255,255,255,0.9)",
+                    color: "#111827", fontSize: 11, fontWeight: 700,
+                    letterSpacing: "0.07em", textTransform: "uppercase",
+                    padding: "5px 14px", borderRadius: 20,
+                    display: "flex", alignItems: "center", gap: 5,
+                    whiteSpace: "nowrap", pointerEvents: "none",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+                  }}>
+                    <Eye size={11}/> Quick View
                   </div>
                 </div>
 
                 {/* Body */}
-                <div style={{ padding: "16px 16px 0", flex: 1 }}>
-                  <p
-                    style={{
-                      margin: "0 0 4px",
-                      fontSize: 10,
-                      fontWeight: 700,
-                      letterSpacing: "0.12em",
-                      textTransform: "uppercase",
-                      color: hovered ? "#9ca3af" : "#6b7280",
-                    }}
-                  >
+                <div style={{ padding: "14px 14px 0", flex: 1 }}>
+                  <p style={{ margin: "0 0 3px", fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#9ca3af" }}>
                     {product.category} · {product.ref}
                   </p>
-                  <p
-                    style={{
-                      margin: "0 0 12px",
-                      fontSize: 14,
-                      fontWeight: 700,
-                      lineHeight: 1.3,
-                      color: hovered ? "#111827" : "#e5e7eb",
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                    }}
-                  >
+                  <p style={{
+                    margin: "0 0 10px", fontSize: 13, fontWeight: 700,
+                    lineHeight: 1.35, color: "#111827",
+                    display: "-webkit-box", WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical", overflow: "hidden",
+                  }}>
                     {product.name}
                   </p>
 
                   {/* Price */}
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-                    <span
-                      style={{
-                        fontSize: 18,
-                        fontWeight: 800,
-                        color: hovered ? "#059669" : "#34d399",
-                        letterSpacing: "-0.02em",
-                      }}
-                    >
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 17, fontWeight: 800, color: "#16a34a", letterSpacing: "-0.02em" }}>
                       {finalPrice} MAD
                     </span>
                     {hasPromo && (
-                      <span
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 400,
-                          color: hovered ? "#9ca3af" : "#6b7280",
-                          textDecoration: "line-through",
-                          textDecorationColor: "#ef4444",
-                        }}
-                      >
+                      <span style={{ fontSize: 11, color: "#9ca3af", textDecoration: "line-through", textDecorationColor: "#ef4444" }}>
                         {product.price.toFixed(2)}
                       </span>
                     )}
@@ -301,33 +222,18 @@ export function ProductCarousel() {
                 </div>
 
                 {/* CTA */}
-                <div style={{ padding: "14px 16px 16px" }}>
-                  <button
-                    style={{
-                      width: "100%",
-                      padding: "11px 0",
-                      border: "none",
-                      borderRadius: 10,
-                      background: hovered
-                        ? "linear-gradient(135deg, #111827, #1f2937)"
-                        : "linear-gradient(135deg, #1e1b4b, #312e81)",
-                      color: "#ffffff",
-                      fontSize: 12,
-                      fontWeight: 700,
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                      boxShadow: hovered
-                        ? "0 4px 14px rgba(0,0,0,0.25)"
-                        : "0 2px 8px rgba(30,27,75,0.4)",
-                      transition: "all 0.2s ease",
-                    }}
-                  >
-                    <ShoppingBag size={14} />
+                <div style={{ padding: "12px 14px 14px" }}>
+                  <button style={{
+                    width: "100%", padding: "10px 0",
+                    border: "none", borderRadius: 8,
+                    background: hovered ? "#0d6efd" : "#111827",
+                    color: "#ffffff", fontSize: 11, fontWeight: 700,
+                    letterSpacing: "0.08em", textTransform: "uppercase",
+                    cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                    transition: "background 0.2s ease",
+                  }}>
+                    <ShoppingBag size={13}/>
                     View Product
                   </button>
                 </div>
@@ -336,51 +242,31 @@ export function ProductCarousel() {
           })}
         </div>
 
-        {/* ── Dots ───────────────────────────────────────────── */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 32 }}>
+        {/* Dots */}
+        <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 28 }}>
           {Array.from({ length: maxOffset + 1 }).map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setOffset(i)}
-              style={{
-                width: i === offset ? 24 : 8,
-                height: 8,
-                borderRadius: 4,
-                border: "none",
-                background: i === offset ? "#f59e0b" : "#333",
-                cursor: "pointer",
-                transition: "all 0.25s ease",
-                padding: 0,
-              }}
-            />
+            <button key={i} onClick={() => setOffset(i)} style={{
+              width: i === offset ? 22 : 8, height: 8,
+              borderRadius: 4, border: "none",
+              background: i === offset ? "#0d6efd" : "#d1d5db",
+              cursor: "pointer", transition: "all 0.25s ease", padding: 0,
+            }} />
           ))}
         </div>
 
-        {/* ── See all button ─────────────────────────────────── */}
-        <div style={{ display: "flex", justifyContent: "center", marginTop: 28 }}>
-          <button
-            style={{
-              padding: "12px 36px",
-              background: "transparent",
-              border: "1.5px solid #f59e0b",
-              color: "#f59e0b",
-              borderRadius: 40,
-              fontSize: 13,
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "#f59e0b";
-              (e.currentTarget as HTMLButtonElement).style.color = "#000";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-              (e.currentTarget as HTMLButtonElement).style.color = "#f59e0b";
-            }}
-          >
+        {/* See all */}
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
+          <button style={{
+            padding: "11px 32px",
+            background: "transparent",
+            border: "1.5px solid #0d6efd",
+            color: "#0d6efd", borderRadius: 40,
+            fontSize: 12, fontWeight: 700,
+            letterSpacing: "0.08em", textTransform: "uppercase",
+            cursor: "pointer", transition: "all 0.2s ease",
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background="#0d6efd"; (e.currentTarget as HTMLButtonElement).style.color="#fff"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background="transparent"; (e.currentTarget as HTMLButtonElement).style.color="#0d6efd"; }}>
             See All Men's Shoes →
           </button>
         </div>
