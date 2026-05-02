@@ -5,7 +5,6 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
-import { Ionicons } from "@expo/vector-icons";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -44,8 +43,9 @@ export default function RootLayout() {
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
-    // Load Ionicons explicitly so icons render on all platforms (web + native)
-    ...Ionicons.font,
+    // Load from local assets to avoid pnpm symlink resolution failures in Metro
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    Ionicons: require("../assets/fonts/Ionicons.ttf"),
   });
 
   useEffect(() => {
