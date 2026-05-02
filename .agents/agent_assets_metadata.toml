@@ -1,0 +1,20 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "jS4Edorfh75qMiJoEs5Fo"
+uri = "file://artifacts/al-firdaous-mobile/assets/images/icon.png"
+type = "image"
+title = "app-icon-firdaous"
+
+[[generated]]
+id = "NB2LjGP4I2jVhi4QS91MM"
+uri = "file://artifacts/al-firdaous-mobile/assets/images/hero_shoes.png"
+type = "image"
+title = "hero-shoes-banner"
+
+[[generated]]
+id = "MrOfGyeISidfXia-86sYw"
+uri = "file://artifacts/al-firdaous-mobile/assets/images/hero_sneakers.png"
+type = "image"
+title = "hero-sneakers-banner"

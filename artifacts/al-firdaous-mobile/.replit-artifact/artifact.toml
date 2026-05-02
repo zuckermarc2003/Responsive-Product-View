@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/al-firdaous-mobile/"
+title = "AL-FIRDAOUS STORE — Mobile App"
+version = "1.0.0"
+id = "artifacts/al-firdaous-mobile"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/al-firdaous-mobile/" ]
+localPort = 19063
+
+[services.development]
+run = "pnpm --filter @workspace/al-firdaous-mobile run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/al-firdaous-mobile", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/al-firdaous-mobile", "run", "serve" ]
+
+[services.env]
+PORT = "19063"
+BASE_PATH = "/al-firdaous-mobile/"

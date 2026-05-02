@@ -1,0 +1,485 @@
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useRef, useState } from 'react';
+import {
+  Alert,
+  Dimensions,
+  FlatList,
+  Image,
+  Platform,
+  Pressable,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
+import { ProductCard } from '@/components/ProductCard';
+import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
+import { useColors } from '@/hooks/useColors';
+import { MOCK_REVIEWS, PRODUCTS, getFinalPrice, getRelated } from '@/constants/data';
+import { Product } from '@/types';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+export default function ProductDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const { addToCart } = useCart();
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
+
+  const product = PRODUCTS.find(p => p.id === id);
+  const [imageIndex, setImageIndex] = useState(0);
+  const [selectedSize, setSelectedSize] = useState<string>('');
+  const [showFullDesc, setShowFullDesc] = useState(false);
+  const cartBtnScale = useSharedValue(1);
+  const heartScale = useSharedValue(1);
+
+  const topPad = Platform.OS === 'web' ? 67 : insets.top;
+  const bottomPad = Platform.OS === 'web' ? 34 : insets.bottom;
+
+  if (!product) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Text>Produit introuvable</Text>
+      </View>
+    );
+  }
+
+  const finalPrice = getFinalPrice(product.price, product.promo);
+  const inWishlist = isInWishlist(product.id);
+  const related = getRelated(product);
+  const styles = makeStyles(colors, topPad, bottomPad);
+
+  const handleAddToCart = useCallback(() => {
+    if (!selectedSize) {
+      Alert.alert('Sélectionnez une taille', 'Veuillez choisir une taille avant d\'ajouter au panier.');
+      return;
+    }
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    cartBtnScale.value = withSpring(0.94, {}, () => { cartBtnScale.value = withSpring(1); });
+    addToCart(product, selectedSize);
+    Alert.alert('Ajouté au panier', `${product.name} (Taille: ${selectedSize}) a été ajouté à votre panier.`);
+  }, [selectedSize, product, addToCart, cartBtnScale]);
+
+  const handleWishlist = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    heartScale.value = withSpring(1.5, {}, () => { heartScale.value = withSpring(1); });
+    if (inWishlist) removeFromWishlist(product.id);
+    else addToWishlist(product);
+  }, [inWishlist, product, addToWishlist, removeFromWishlist, heartScale]);
+
+  const cartBtnStyle = useAnimatedStyle(() => ({ transform: [{ scale: cartBtnScale.value }] }));
+  const heartStyle = useAnimatedStyle(() => ({ transform: [{ scale: heartScale.value }] }));
+
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
+
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* ── Image Gallery ── */}
+        <View style={styles.galleryContainer}>
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={e => {
+              const idx = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+              setImageIndex(idx);
+            }}
+          >
+            {product.images.map((uri, i) => (
+              <Image key={i} source={{ uri }} style={styles.galleryImage} resizeMode="cover" />
+            ))}
+          </ScrollView>
+
+          {/* Pagination dots */}
+          {product.images.length > 1 && (
+            <View style={styles.dotsRow}>
+              {product.images.map((_, i) => (
+                <View
+                  key={i}
+                  style={[styles.dot, i === imageIndex && styles.dotActive]}
+                />
+              ))}
+            </View>
+          )}
+
+          {/* Back button */}
+          <Pressable style={[styles.backBtn, { top: topPad + 8 }]} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={22} color="#fff" />
+          </Pressable>
+
+          {/* Wishlist button */}
+          <Animated.View style={[styles.wishlistBtn, { top: topPad + 8 }, heartStyle]}>
+            <Pressable onPress={handleWishlist}>
+              <Ionicons
+                name={inWishlist ? 'heart' : 'heart-outline'}
+                size={22}
+                color={inWishlist ? colors.destructive : '#fff'}
+              />
+            </Pressable>
+          </Animated.View>
+
+          {product.promo > 0 && (
+            <View style={styles.galleryBadge}>
+              <Text style={styles.galleryBadgeText}>-{product.promo}%</Text>
+            </View>
+          )}
+        </View>
+
+        {/* ── Product Info ── */}
+        <View style={styles.infoCard}>
+          <View style={styles.infoTop}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.brand}>{product.brand}</Text>
+              <Text style={styles.name}>{product.name}</Text>
+              <Text style={styles.ref}>REF: {product.ref}</Text>
+            </View>
+            <View style={styles.ratingBox}>
+              <Ionicons name="star" size={14} color={colors.starGold} />
+              <Text style={styles.rating}>{product.rating}</Text>
+              <Text style={styles.reviewCount}>({product.reviewCount})</Text>
+            </View>
+          </View>
+
+          {/* Price */}
+          <View style={styles.priceRow}>
+            <Text style={styles.finalPrice}>{finalPrice.toFixed(2)} MAD</Text>
+            {product.promo > 0 && (
+              <>
+                <Text style={styles.originalPrice}>{product.price.toFixed(2)} MAD</Text>
+                <View style={styles.discountTag}>
+                  <Text style={styles.discountTagText}>-{product.promo}%</Text>
+                </View>
+              </>
+            )}
+          </View>
+
+          {/* Size selector */}
+          <View style={styles.sizeSection}>
+            <Text style={styles.sizeLabel}>
+              Taille{selectedSize ? `: ${selectedSize}` : ' — Sélectionner'}
+            </Text>
+            <View style={styles.sizeGrid}>
+              {product.sizes.map(size => (
+                <Pressable
+                  key={size}
+                  style={[styles.sizeBtn, selectedSize === size && styles.sizeBtnActive]}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setSelectedSize(size);
+                  }}
+                >
+                  <Text style={[styles.sizeBtnText, selectedSize === size && styles.sizeBtnTextActive]}>
+                    {size}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+          {/* Description */}
+          <View style={styles.descSection}>
+            <Text style={styles.descTitle}>Description</Text>
+            <Text style={styles.descText} numberOfLines={showFullDesc ? undefined : 3}>
+              {product.description}
+            </Text>
+            <Pressable onPress={() => setShowFullDesc(v => !v)}>
+              <Text style={styles.readMore}>{showFullDesc ? 'Voir moins' : 'Lire plus'}</Text>
+            </Pressable>
+          </View>
+
+          {/* Features */}
+          <View style={styles.featuresRow}>
+            {[
+              { icon: 'shield-checkmark-outline' as const, label: 'Qualité garantie' },
+              { icon: 'refresh-outline' as const, label: 'Retour 30j' },
+              { icon: 'car-outline' as const, label: 'Livraison gratuite' },
+            ].map(f => (
+              <View key={f.label} style={styles.featureItem}>
+                <Ionicons name={f.icon} size={20} color={colors.primary} />
+                <Text style={styles.featureText}>{f.label}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* ── Reviews ── */}
+        <View style={styles.reviewsSection}>
+          <View style={styles.reviewsHeader}>
+            <Text style={styles.reviewsTitle}>Avis clients</Text>
+            <View style={styles.overallRating}>
+              <Text style={styles.overallRatingNum}>{product.rating}</Text>
+              <View>
+                <View style={styles.starsRow}>
+                  {[1, 2, 3, 4, 5].map(s => (
+                    <Ionicons
+                      key={s}
+                      name={s <= Math.floor(product.rating) ? 'star' : 'star-outline'}
+                      size={14}
+                      color={colors.starGold}
+                    />
+                  ))}
+                </View>
+                <Text style={styles.reviewCountText}>{product.reviewCount} avis</Text>
+              </View>
+            </View>
+          </View>
+
+          {MOCK_REVIEWS.map(review => (
+            <View key={review.id} style={styles.reviewCard}>
+              <View style={styles.reviewHeader}>
+                <View style={styles.reviewAvatar}>
+                  <Text style={styles.reviewAvatarText}>{review.author.charAt(0)}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.reviewAuthor}>{review.author}</Text>
+                  <View style={styles.starsRow}>
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <Ionicons
+                        key={s}
+                        name={s <= review.rating ? 'star' : 'star-outline'}
+                        size={12}
+                        color={colors.starGold}
+                      />
+                    ))}
+                  </View>
+                </View>
+                <Text style={styles.reviewDate}>{review.date}</Text>
+              </View>
+              <Text style={styles.reviewText}>{review.comment}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* ── Related Products ── */}
+        {related.length > 0 && (
+          <View style={styles.relatedSection}>
+            <Text style={styles.relatedTitle}>Produits similaires</Text>
+            <FlatList
+              data={related}
+              horizontal
+              keyExtractor={p => p.id}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
+              renderItem={({ item }) => <ProductCard product={item} variant="carousel" />}
+            />
+          </View>
+        )}
+
+        <View style={{ height: bottomPad + 100 }} />
+      </ScrollView>
+
+      {/* ── Sticky CTA ── */}
+      <View style={[styles.cta, { paddingBottom: bottomPad + 8 }]}>
+        <Animated.View style={[{ flex: 1 }, cartBtnStyle]}>
+          <Pressable style={styles.cartBtn} onPress={handleAddToCart}>
+            <Ionicons name="cart-outline" size={22} color="#fff" />
+            <Text style={styles.cartBtnText}>Ajouter au panier</Text>
+          </Pressable>
+        </Animated.View>
+        <Pressable style={styles.buyNowBtn} onPress={() => {
+          if (!selectedSize) {
+            Alert.alert('Sélectionnez une taille', 'Veuillez choisir une taille.');
+            return;
+          }
+          addToCart(product, selectedSize);
+          router.push('/(tabs)/cart' as any);
+        }}>
+          <Text style={styles.buyNowText}>Commander</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottomPad: number) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+
+    galleryContainer: { width: SCREEN_WIDTH, height: SCREEN_WIDTH * 1.05, backgroundColor: colors.muted },
+    galleryImage: { width: SCREEN_WIDTH, height: SCREEN_WIDTH * 1.05 },
+    dotsRow: {
+      position: 'absolute',
+      bottom: 12,
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: 6,
+    },
+    dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.5)' },
+    dotActive: { width: 20, backgroundColor: '#fff' },
+
+    backBtn: {
+      position: 'absolute',
+      left: 12,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: 'rgba(0,0,0,0.45)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    wishlistBtn: {
+      position: 'absolute',
+      right: 12,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: 'rgba(0,0,0,0.45)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    galleryBadge: {
+      position: 'absolute',
+      bottom: 40,
+      left: 12,
+      backgroundColor: colors.promoBadge,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    galleryBadgeText: { color: '#fff', fontSize: 12, fontFamily: 'Inter_700Bold' },
+
+    infoCard: {
+      backgroundColor: colors.card,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      marginTop: -20,
+      paddingTop: 24,
+      paddingHorizontal: 20,
+      paddingBottom: 20,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    infoTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 12 },
+    brand: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: colors.primary, textTransform: 'uppercase', letterSpacing: 1 },
+    name: { fontSize: 22, fontFamily: 'Inter_700Bold', color: colors.foreground, marginTop: 2, lineHeight: 28 },
+    ref: { fontSize: 11, fontFamily: 'Inter_400Regular', color: colors.mutedForeground, marginTop: 4 },
+    ratingBox: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 4 },
+    rating: { fontSize: 14, fontFamily: 'Inter_700Bold', color: colors.foreground },
+    reviewCount: { fontSize: 12, fontFamily: 'Inter_400Regular', color: colors.mutedForeground },
+
+    priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 10, marginBottom: 20 },
+    finalPrice: { fontSize: 28, fontFamily: 'Inter_700Bold', color: colors.priceGreen },
+    originalPrice: { fontSize: 15, fontFamily: 'Inter_400Regular', color: colors.mutedForeground, textDecorationLine: 'line-through' },
+    discountTag: { backgroundColor: `${colors.promoBadge}18`, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+    discountTagText: { color: colors.promoBadge, fontSize: 12, fontFamily: 'Inter_700Bold' },
+
+    sizeSection: { marginBottom: 20 },
+    sizeLabel: { fontSize: 14, fontFamily: 'Inter_700Bold', color: colors.foreground, marginBottom: 10 },
+    sizeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    sizeBtn: {
+      minWidth: 48,
+      height: 44,
+      borderRadius: 10,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 12,
+    },
+    sizeBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+    sizeBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: colors.foreground },
+    sizeBtnTextActive: { color: '#fff' },
+
+    descSection: { marginBottom: 20 },
+    descTitle: { fontSize: 16, fontFamily: 'Inter_700Bold', color: colors.foreground, marginBottom: 8 },
+    descText: { fontSize: 14, fontFamily: 'Inter_400Regular', color: colors.mutedForeground, lineHeight: 22 },
+    readMore: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: colors.primary, marginTop: 6 },
+
+    featuresRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      paddingVertical: 16,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    featureItem: { alignItems: 'center', gap: 6 },
+    featureText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: colors.mutedForeground, textAlign: 'center' },
+
+    reviewsSection: { padding: 20 },
+    reviewsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+    reviewsTitle: { fontSize: 18, fontFamily: 'Inter_700Bold', color: colors.foreground },
+    overallRating: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    overallRatingNum: { fontSize: 32, fontFamily: 'Inter_700Bold', color: colors.foreground },
+    starsRow: { flexDirection: 'row', gap: 2 },
+    reviewCountText: { fontSize: 11, fontFamily: 'Inter_400Regular', color: colors.mutedForeground, marginTop: 2 },
+
+    reviewCard: {
+      backgroundColor: colors.card,
+      borderRadius: 14,
+      padding: 14,
+      marginBottom: 10,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 6,
+      elevation: 2,
+    },
+    reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+    reviewAvatar: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: colors.secondary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    reviewAvatarText: { fontSize: 16, fontFamily: 'Inter_700Bold', color: colors.primary },
+    reviewAuthor: { fontSize: 14, fontFamily: 'Inter_700Bold', color: colors.foreground },
+    reviewDate: { fontSize: 11, fontFamily: 'Inter_400Regular', color: colors.mutedForeground },
+    reviewText: { fontSize: 13, fontFamily: 'Inter_400Regular', color: colors.mutedForeground, lineHeight: 20 },
+
+    relatedSection: { marginBottom: 16 },
+    relatedTitle: { fontSize: 18, fontFamily: 'Inter_700Bold', color: colors.foreground, paddingHorizontal: 16, marginBottom: 12 },
+
+    cta: {
+      flexDirection: 'row',
+      gap: 10,
+      padding: 16,
+      paddingTop: 12,
+      backgroundColor: colors.card,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 12,
+      elevation: 12,
+    },
+    cartBtn: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: colors.primary,
+      borderRadius: 14,
+      paddingVertical: 15,
+    },
+    cartBtnText: { color: '#fff', fontSize: 15, fontFamily: 'Inter_700Bold' },
+    buyNowBtn: {
+      paddingHorizontal: 20,
+      borderRadius: 14,
+      borderWidth: 2,
+      borderColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    buyNowText: { color: colors.primary, fontSize: 14, fontFamily: 'Inter_700Bold' },
+  });
