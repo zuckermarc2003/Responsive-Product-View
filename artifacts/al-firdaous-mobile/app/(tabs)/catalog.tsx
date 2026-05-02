@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
+  Dimensions,
   FlatList,
   Platform,
   Pressable,
@@ -12,8 +13,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProductCard } from '@/components/ProductCard';
+import { SkeletonCard } from '@/components/SkeletonCard';
 import { useColors } from '@/hooks/useColors';
-import { CATEGORIES, PRODUCTS } from '@/constants/data';
+import { useProducts } from '@/hooks/useProducts';
+import { CATEGORIES } from '@/constants/data';
 import { Product } from '@/types';
 
 type SortKey = 'default' | 'price_asc' | 'price_desc' | 'rating';
@@ -25,6 +28,8 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'rating', label: 'Mieux notés' },
 ];
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 export default function CatalogScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -35,29 +40,18 @@ export default function CatalogScreen() {
   const [promoOnly, setPromoOnly] = useState(false);
 
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
+  const cardWidth = (SCREEN_WIDTH - 48) / 2;
   const styles = makeStyles(colors, topPad);
 
-  const filtered = PRODUCTS
-    .filter(p => {
-      const matchCat = selectedCat === 'all' || p.product_type === selectedCat;
-      const matchQuery = query.trim() === '' ||
-        p.name.toLowerCase().includes(query.toLowerCase()) ||
-        p.brand.toLowerCase().includes(query.toLowerCase()) ||
-        p.category.toLowerCase().includes(query.toLowerCase());
-      const matchPromo = !promoOnly || p.promo > 0;
-      return matchCat && matchQuery && matchPromo;
-    })
-    .sort((a, b) => {
-      if (sort === 'price_asc') return a.price - b.price;
-      if (sort === 'price_desc') return b.price - a.price;
-      if (sort === 'rating') return b.rating - a.rating;
-      return 0;
-    });
-
-  const numCols = 2;
+  const { data: products = [], isLoading, error, refetch } = useProducts({
+    category: selectedCat,
+    search: query,
+    sort,
+    promo: promoOnly,
+  });
 
   const renderProduct = ({ item }: { item: Product }) => (
-    <View style={styles.cardWrapper}>
+    <View style={{ flex: 1 }}>
       <ProductCard product={item} variant="grid" />
     </View>
   );
@@ -110,11 +104,7 @@ export default function CatalogScreen() {
       </View>
 
       {/* ── Categories ── */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.catScroll}
-      >
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.catScroll}>
         {CATEGORIES.map(cat => {
           const active = selectedCat === cat.key;
           return (
@@ -123,9 +113,7 @@ export default function CatalogScreen() {
               style={[styles.catPill, active && styles.catPillActive]}
               onPress={() => setSelectedCat(cat.key)}
             >
-              <Text style={[styles.catPillText, active && styles.catPillTextActive]}>
-                {cat.label}
-              </Text>
+              <Text style={[styles.catPillText, active && styles.catPillTextActive]}>{cat.label}</Text>
             </Pressable>
           );
         })}
@@ -139,28 +127,45 @@ export default function CatalogScreen() {
       </ScrollView>
 
       {/* ── Results count ── */}
-      <View style={styles.resultRow}>
-        <Text style={styles.resultCount}>{filtered.length} produit{filtered.length > 1 ? 's' : ''}</Text>
-      </View>
+      {!isLoading && (
+        <View style={styles.resultRow}>
+          <Text style={styles.resultCount}>{products.length} produit{products.length > 1 ? 's' : ''}</Text>
+        </View>
+      )}
 
-      {/* ── Grid ── */}
-      <FlatList
-        data={filtered}
-        keyExtractor={item => item.id}
-        numColumns={numCols}
-        contentContainerStyle={styles.list}
-        columnWrapperStyle={styles.columnWrapper}
-        showsVerticalScrollIndicator={false}
-        renderItem={renderProduct}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Ionicons name="search-outline" size={48} color={colors.border} />
-            <Text style={styles.emptyTitle}>Aucun produit trouvé</Text>
-            <Text style={styles.emptyText}>Essayez un autre terme de recherche</Text>
-          </View>
-        }
-        ListFooterComponent={<View style={{ height: Platform.OS === 'web' ? 34 : insets.bottom + 80 }} />}
-      />
+      {/* ── Content ── */}
+      {isLoading ? (
+        <View style={styles.skeletonGrid}>
+          {[1, 2, 3, 4].map(i => <SkeletonCard key={i} width={cardWidth} />)}
+        </View>
+      ) : error ? (
+        <View style={styles.errorContainer}>
+          <Ionicons name="wifi-outline" size={48} color={colors.border} />
+          <Text style={styles.errorTitle}>Erreur de connexion</Text>
+          <Text style={styles.errorText}>Impossible de charger les produits.</Text>
+          <Pressable style={[styles.retryBtn, { backgroundColor: colors.primary }]} onPress={() => refetch()}>
+            <Text style={styles.retryBtnText}>Réessayer</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <FlatList
+          data={products}
+          keyExtractor={item => item.id}
+          numColumns={2}
+          contentContainerStyle={styles.list}
+          columnWrapperStyle={styles.columnWrapper}
+          showsVerticalScrollIndicator={false}
+          renderItem={renderProduct}
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Ionicons name="search-outline" size={48} color={colors.border} />
+              <Text style={styles.emptyTitle}>Aucun produit trouvé</Text>
+              <Text style={styles.emptyText}>Essayez un autre terme de recherche</Text>
+            </View>
+          }
+          ListFooterComponent={<View style={{ height: Platform.OS === 'web' ? 34 : insets.bottom + 80 }} />}
+        />
+      )}
     </View>
   );
 }
@@ -169,90 +174,53 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingTop: topPad + 12,
-      paddingBottom: 12,
-      paddingHorizontal: 16,
-      backgroundColor: colors.card,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      paddingTop: topPad + 12, paddingBottom: 12, paddingHorizontal: 16,
+      backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.border,
     },
     headerTitle: { fontSize: 20, fontFamily: 'Inter_700Bold', color: colors.foreground },
     sortBtn: { flexDirection: 'row', alignItems: 'center', gap: 5 },
     sortBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: colors.primary },
-
     sortDropdown: {
-      backgroundColor: colors.card,
-      marginHorizontal: 16,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 8,
-      zIndex: 100,
+      backgroundColor: colors.card, marginHorizontal: 16, borderRadius: 12,
+      borderWidth: 1, borderColor: colors.border,
+      shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8,
+      elevation: 8, zIndex: 100,
     },
     sortOption: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: 14,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      padding: 14, borderBottomWidth: 1, borderBottomColor: colors.border,
     },
     sortOptionActive: { backgroundColor: colors.secondary },
     sortOptionText: { fontSize: 14, fontFamily: 'Inter_500Medium', color: colors.foreground },
     sortOptionTextActive: { color: colors.primary, fontFamily: 'Inter_700Bold' },
-
     searchBar: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginHorizontal: 16,
-      marginTop: 12,
-      marginBottom: 4,
-      backgroundColor: colors.card,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-      paddingHorizontal: 14,
-      paddingVertical: 10,
-      gap: 10,
+      flexDirection: 'row', alignItems: 'center',
+      marginHorizontal: 16, marginTop: 12, marginBottom: 4,
+      backgroundColor: colors.card, borderRadius: 12,
+      borderWidth: 1, borderColor: colors.border,
+      paddingHorizontal: 14, paddingVertical: 10, gap: 10,
     },
-    searchInput: {
-      flex: 1,
-      fontSize: 14,
-      fontFamily: 'Inter_400Regular',
-      color: colors.foreground,
-      padding: 0,
-    },
-
+    searchInput: { flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular', color: colors.foreground, padding: 0 },
     catScroll: { paddingHorizontal: 16, gap: 8, paddingVertical: 10 },
     catPill: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 5,
-      paddingHorizontal: 14,
-      paddingVertical: 7,
-      borderRadius: 20,
-      backgroundColor: colors.card,
-      borderWidth: 1.5,
-      borderColor: colors.border,
+      flexDirection: 'row', alignItems: 'center', gap: 5,
+      paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20,
+      backgroundColor: colors.card, borderWidth: 1.5, borderColor: colors.border,
     },
     catPillActive: { backgroundColor: colors.primary, borderColor: colors.primary },
     catPillText: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: colors.mutedForeground },
     catPillTextActive: { color: '#fff' },
-
     resultRow: { paddingHorizontal: 16, paddingBottom: 8 },
     resultCount: { fontSize: 12, fontFamily: 'Inter_500Medium', color: colors.mutedForeground },
-
     list: { paddingHorizontal: 12, paddingTop: 4 },
     columnWrapper: { gap: 12, marginBottom: 12 },
-    cardWrapper: { flex: 1 },
-
+    skeletonGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 12, paddingTop: 8, gap: 12 },
+    errorContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32, marginTop: 60 },
+    errorTitle: { fontSize: 18, fontFamily: 'Inter_700Bold', color: colors.foreground },
+    errorText: { fontSize: 14, fontFamily: 'Inter_400Regular', color: colors.mutedForeground, textAlign: 'center' },
+    retryBtn: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12, marginTop: 8 },
+    retryBtnText: { color: '#fff', fontSize: 14, fontFamily: 'Inter_700Bold' },
     empty: { alignItems: 'center', paddingTop: 60, gap: 10 },
     emptyTitle: { fontSize: 17, fontFamily: 'Inter_700Bold', color: colors.foreground },
     emptyText: { fontSize: 14, fontFamily: 'Inter_400Regular', color: colors.mutedForeground },
