@@ -1,7 +1,14 @@
 import { AppIcon } from '@/components/AppIcon';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   Alert,
   Image,
@@ -31,7 +38,7 @@ const MOROCCAN_CITIES = [
 type Step = 1 | 2 | 3;
 type PaymentMethod = 'cod' | null;
 
-interface FormData {
+interface FormValues {
   firstName: string;
   lastName: string;
   email: string;
@@ -77,44 +84,51 @@ const stepDotS = StyleSheet.create({
   numActive: { color: '#fff' },
 });
 
-// ── Form field ─────────────────────────────────────────────────────────────────
-const Field = React.memo(({
-  label, icon, value, onChangeText, placeholder, keyboardType, error,
+// ── Individual text field (fully self-contained, no parent dependency) ────────
+function InputField({
+  label,
+  icon,
+  placeholder,
+  keyboardType,
   autoCapitalize,
+  onChangeText,
+  defaultValue = '',
+  colors,
 }: {
-  label: string; icon: string; value: string; onChangeText: (v: string) => void;
-  placeholder?: string; keyboardType?: any; error?: string; autoCapitalize?: any;
-}) => {
-  const colors = useColors();
+  label: string;
+  icon: string;
+  placeholder?: string;
+  keyboardType?: any;
+  autoCapitalize?: any;
+  onChangeText: (v: string) => void;
+  defaultValue?: string;
+  colors: any;
+}) {
   const [focused, setFocused] = useState(false);
   return (
-    <View style={fieldS.wrap}>
-      <Text style={[fieldS.label, { color: colors.mutedForeground }]}>{label}</Text>
+    <View style={inputFieldS.wrap}>
+      <Text style={[inputFieldS.label, { color: colors.mutedForeground }]}>{label}</Text>
       <View style={[
-        fieldS.inputWrap,
-        { backgroundColor: colors.card, borderColor: colors.border },
-        focused && { borderColor: '#4facff', shadowColor: '#4facff', shadowOpacity: 0.15, shadowRadius: 6, shadowOffset: { width: 0, height: 0 } },
-        !!error && { borderColor: '#ef4444' },
+        inputFieldS.inputWrap,
+        { backgroundColor: colors.card, borderColor: focused ? '#4facff' : colors.border },
       ]}>
         <AppIcon name={icon as any} size={17} color={focused ? '#4facff' : colors.mutedForeground} />
         <TextInput
-          style={[fieldS.input, { color: colors.foreground }]}
-          value={value}
+          style={[inputFieldS.input, { color: colors.foreground }]}
+          defaultValue={defaultValue}
           onChangeText={onChangeText}
           placeholder={placeholder}
           placeholderTextColor={colors.mutedForeground}
           keyboardType={keyboardType ?? 'default'}
           autoCapitalize={autoCapitalize ?? 'words'}
-          selectTextOnFocus={false}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
         />
       </View>
-      {!!error && <Text style={fieldS.error}>{error}</Text>}
     </View>
   );
-});
-const fieldS = StyleSheet.create({
+}
+const inputFieldS = StyleSheet.create({
   wrap: { gap: 5 },
   label: { fontSize: 11, fontFamily: 'Inter_700Bold', letterSpacing: 0.8, textTransform: 'uppercase' },
   inputWrap: {
@@ -122,17 +136,17 @@ const fieldS = StyleSheet.create({
     borderWidth: 1.5, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12,
   },
   input: { flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular', padding: 0 },
-  error: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: '#ef4444' },
 });
 
-// ── City picker modal ─────────────────────────────────────────────────────────
-const CityPicker = React.memo(({
+// ── City picker ───────────────────────────────────────────────────────────────
+function CityPicker({
   value, onSelect, colors,
-}: { value: string; onSelect: (c: string) => void; colors: any }) => {
+}: { value: string; onSelect: (c: string) => void; colors: any }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const filtered = MOROCCAN_CITIES.filter(c =>
-    c.toLowerCase().includes(query.toLowerCase())
+  const filtered = useMemo(
+    () => MOROCCAN_CITIES.filter(c => c.toLowerCase().includes(query.toLowerCase())),
+    [query],
   );
 
   return (
@@ -166,7 +180,12 @@ const CityPicker = React.memo(({
                 autoFocus
               />
             </View>
-            <ScrollView style={pickerS.scrollView} nestedScrollEnabled showsVerticalScrollIndicator={true}>
+            <ScrollView
+              style={pickerS.scrollView}
+              nestedScrollEnabled
+              showsVerticalScrollIndicator
+              keyboardShouldPersistTaps="handled"
+            >
               {filtered.map(city => (
                 <Pressable
                   key={city}
@@ -187,7 +206,7 @@ const CityPicker = React.memo(({
       )}
     </>
   );
-});
+}
 const pickerS = StyleSheet.create({
   wrap: { gap: 5 },
   label: { fontSize: 11, fontFamily: 'Inter_700Bold', letterSpacing: 0.8, textTransform: 'uppercase' },
@@ -197,13 +216,13 @@ const pickerS = StyleSheet.create({
   },
   val: { flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular' },
   backdrop: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    position: 'absolute', top: -1000, left: 0, right: 0, bottom: -1000,
     backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 999,
     justifyContent: 'flex-end',
   },
   sheet: {
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 20, paddingBottom: 40, height: '80%',
+    padding: 20, paddingBottom: 40, maxHeight: 500,
   },
   sheetTitle: { fontSize: 17, fontFamily: 'Inter_700Bold', marginBottom: 14, textAlign: 'center' },
   search: {
@@ -211,7 +230,7 @@ const pickerS = StyleSheet.create({
     borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 10,
   },
   searchInput: { flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular', padding: 0 },
-  scrollView: { maxHeight: 400, flex: 1 },
+  scrollView: { flex: 1, minHeight: 200 },
   cityRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingVertical: 14, paddingHorizontal: 4, borderBottomWidth: 1,
@@ -219,73 +238,133 @@ const pickerS = StyleSheet.create({
   cityText: { fontSize: 15, fontFamily: 'Inter_500Medium' },
 });
 
-// ── Step 1 Form (memoized to prevent re-renders) ──────────────────────────────
-const Step1Form = React.memo(({
-  form, setFirstName, setLastName, setEmail, setPhone, setCity, setAddress, colors, styles,
-}: any) => (
-  <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-    <View style={styles.cardHeader}>
-      <Text style={styles.cardStep}>ÉTAPE 1 / 2</Text>
-      <Text style={styles.cardTitle}>Informations de livraison</Text>
-    </View>
-    <View style={styles.cardBody}>
-      <View style={styles.row}>
-        <View style={{ flex: 1 }}>
-          <Field
-            label="Prénom"
-            icon="person-outline"
-            value={form.firstName}
-            onChangeText={setFirstName}
-            placeholder="Mohamed"
-          />
+// ── Step1Form — completely self-contained, parent only reads via ref ───────────
+// This is the KEY fix: typing updates ONLY internal state → parent never re-renders
+export interface Step1FormHandle {
+  validate: () => boolean;
+  getValues: () => FormValues;
+}
+
+const Step1Form = forwardRef<Step1FormHandle, { colors: any }>(
+  ({ colors }, ref) => {
+    const [city, setCity] = useState('');
+    const firstNameRef = useRef('');
+    const lastNameRef = useRef('');
+    const emailRef = useRef('');
+    const phoneRef = useRef('');
+    const addressRef = useRef('');
+    const [errors, setErrors] = useState<FieldErrors>({});
+
+    useImperativeHandle(ref, () => ({
+      validate() {
+        const e: FieldErrors = {};
+        if (!firstNameRef.current.trim()) e.firstName = 'Requis';
+        if (!lastNameRef.current.trim()) e.lastName = 'Requis';
+        if (!phoneRef.current.trim() || phoneRef.current.replace(/\D/g, '').length < 9)
+          e.phone = 'Numéro invalide';
+        if (!city) e.city = 'Requis';
+        if (!addressRef.current.trim()) e.address = 'Requis';
+        setErrors(e);
+        return Object.keys(e).length === 0;
+      },
+      getValues() {
+        return {
+          firstName: firstNameRef.current,
+          lastName: lastNameRef.current,
+          email: emailRef.current,
+          phone: phoneRef.current,
+          city,
+          address: addressRef.current,
+        };
+      },
+    }), [city]);
+
+    return (
+      <View style={[formS.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={formS.cardHeader}>
+          <Text style={formS.cardStep}>ÉTAPE 1 / 2</Text>
+          <Text style={formS.cardTitle}>Informations de livraison</Text>
         </View>
-        <View style={{ flex: 1 }}>
-          <Field
-            label="Nom"
-            icon="person-outline"
-            value={form.lastName}
-            onChangeText={setLastName}
-            placeholder="Alami"
+        <View style={formS.cardBody}>
+          <View style={formS.row}>
+            <View style={{ flex: 1 }}>
+              <InputField
+                label="Prénom"
+                icon="person-outline"
+                placeholder="Mohamed"
+                onChangeText={v => { firstNameRef.current = v; }}
+                colors={colors}
+              />
+              {!!errors.firstName && <Text style={formS.error}>{errors.firstName}</Text>}
+            </View>
+            <View style={{ flex: 1 }}>
+              <InputField
+                label="Nom"
+                icon="person-outline"
+                placeholder="Alami"
+                onChangeText={v => { lastNameRef.current = v; }}
+                colors={colors}
+              />
+              {!!errors.lastName && <Text style={formS.error}>{errors.lastName}</Text>}
+            </View>
+          </View>
+
+          <InputField
+            label="Email (optionnel)"
+            icon="mail-outline"
+            placeholder="email@exemple.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            onChangeText={v => { emailRef.current = v; }}
+            colors={colors}
           />
+
+          <View>
+            <InputField
+              label="Téléphone"
+              icon="call-outline"
+              placeholder="+212 6XX XXX XXX"
+              keyboardType="phone-pad"
+              autoCapitalize="none"
+              onChangeText={v => { phoneRef.current = v; }}
+              colors={colors}
+            />
+            {!!errors.phone && <Text style={formS.error}>{errors.phone}</Text>}
+          </View>
+
+          <View>
+            <CityPicker value={city} onSelect={setCity} colors={colors} />
+            {!!errors.city && <Text style={formS.error}>{errors.city}</Text>}
+          </View>
+
+          <View>
+            <InputField
+              label="Adresse complète"
+              icon="home-outline"
+              placeholder="Rue, quartier, numéro..."
+              onChangeText={v => { addressRef.current = v; }}
+              colors={colors}
+            />
+            {!!errors.address && <Text style={formS.error}>{errors.address}</Text>}
+          </View>
         </View>
       </View>
+    );
+  },
+);
+Step1Form.displayName = 'Step1Form';
 
-      <Field
-        label="Email (optionnel)"
-        icon="mail-outline"
-        value={form.email}
-        onChangeText={setEmail}
-        placeholder="email@exemple.com"
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-
-      <Field
-        label="Téléphone"
-        icon="call-outline"
-        value={form.phone}
-        onChangeText={setPhone}
-        placeholder="+212 6XX XXX XXX"
-        keyboardType="phone-pad"
-        autoCapitalize="none"
-      />
-
-      <CityPicker
-        value={form.city}
-        onSelect={setCity}
-        colors={colors}
-      />
-
-      <Field
-        label="Adresse complète"
-        icon="home-outline"
-        value={form.address}
-        onChangeText={setAddress}
-        placeholder="Rue, quartier, numéro..."
-      />
-    </View>
-  </View>
-));
+const formS = StyleSheet.create({
+  card: { borderRadius: 16, borderWidth: 1, overflow: 'hidden' },
+  cardHeader: {
+    backgroundColor: '#0f1c35', paddingHorizontal: 20, paddingVertical: 16,
+  },
+  cardStep: { fontSize: 10, fontFamily: 'Inter_700Bold', color: '#4facff', letterSpacing: 1, marginBottom: 3 },
+  cardTitle: { fontSize: 16, fontFamily: 'Inter_700Bold', color: '#fff' },
+  cardBody: { padding: 16, gap: 14 },
+  row: { flexDirection: 'row', gap: 10 },
+  error: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: '#ef4444', marginTop: 3 },
+});
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function CheckoutScreen() {
@@ -297,36 +376,27 @@ export default function CheckoutScreen() {
   const [step, setStep] = useState<Step>(1);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(null);
   const [policiesAccepted, setPoliciesAccepted] = useState(false);
-  const [form, setForm] = useState<FormData>({
+  // Confirmed values (only set when step 1 passes validation)
+  const [confirmedForm, setConfirmedForm] = useState<FormValues>({
     firstName: '', lastName: '', email: '', phone: '', city: '', address: '',
   });
-  const [errors, setErrors] = useState<FieldErrors>({});
+
+  const formRef = useRef<Step1FormHandle>(null);
 
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const bottomPad = Platform.OS === 'web' ? 34 : insets.bottom;
 
-  const setFirstName = useCallback((v: string) => setForm(f => ({ ...f, firstName: v })), []);
-  const setLastName = useCallback((v: string) => setForm(f => ({ ...f, lastName: v })), []);
-  const setEmail = useCallback((v: string) => setForm(f => ({ ...f, email: v })), []);
-  const setPhone = useCallback((v: string) => setForm(f => ({ ...f, phone: v })), []);
-  const setAddress = useCallback((v: string) => setForm(f => ({ ...f, address: v })), []);
-  const setCity = useCallback((v: string) => setForm(f => ({ ...f, city: v })), []);
-
-  function validateStep1(): boolean {
-    const e: FieldErrors = {};
-    if (!form.firstName.trim()) e.firstName = 'Requis';
-    if (!form.lastName.trim()) e.lastName = 'Requis';
-    if (!form.phone.trim() || form.phone.replace(/\D/g, '').length < 9)
-      e.phone = 'Numéro invalide';
-    if (!form.city) e.city = 'Requis';
-    if (!form.address.trim()) e.address = 'Requis';
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  }
+  const styles = useMemo(
+    () => makeStyles(colors, topPad, bottomPad),
+    [colors, topPad, bottomPad],
+  );
 
   function handleNextStep() {
     if (step === 1) {
-      if (!validateStep1()) return;
+      const valid = formRef.current?.validate() ?? false;
+      if (!valid) return;
+      const values = formRef.current!.getValues();
+      setConfirmedForm(values);
       setStep(2);
     } else if (step === 2) {
       if (!paymentMethod) {
@@ -342,8 +412,6 @@ export default function CheckoutScreen() {
       clearCart();
     }
   }
-
-  const styles = makeStyles(colors, topPad, bottomPad);
 
   // ── Step 3: Success screen ─────────────────────────────────────────────────
   if (step === 3) {
@@ -368,23 +436,22 @@ export default function CheckoutScreen() {
           </Text>
           <Text style={[styles.successSub, { color: colors.mutedForeground }]}>
             Notre équipe vous contactera au{'\n'}
-            <Text style={{ color: colors.primary, fontFamily: 'Inter_700Bold' }}>{form.phone}</Text>
-            {'\n'}pour confirmer la livraison à {form.city}.
+            <Text style={{ color: colors.primary, fontFamily: 'Inter_700Bold' }}>{confirmedForm.phone}</Text>
+            {'\n'}pour confirmer la livraison à {confirmedForm.city}.
           </Text>
 
-          {/* ── Summary card ── */}
           <View style={[styles.successCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.successCardRow}>
               <Text style={[styles.successCardLabel, { color: colors.mutedForeground }]}>Client</Text>
               <Text style={[styles.successCardVal, { color: colors.foreground }]}>
-                {form.firstName} {form.lastName}
+                {confirmedForm.firstName} {confirmedForm.lastName}
               </Text>
             </View>
             <View style={[styles.successDivider, { backgroundColor: colors.border }]} />
             <View style={styles.successCardRow}>
               <Text style={[styles.successCardLabel, { color: colors.mutedForeground }]}>Adresse</Text>
               <Text style={[styles.successCardVal, { color: colors.foreground }]} numberOfLines={2}>
-                {form.address}, {form.city}
+                {confirmedForm.address}, {confirmedForm.city}
               </Text>
             </View>
             <View style={[styles.successDivider, { backgroundColor: colors.border }]} />
@@ -427,7 +494,6 @@ export default function CheckoutScreen() {
   // ── Step 1 & 2 ─────────────────────────────────────────────────────────────
   return (
     <View style={styles.container}>
-      {/* ── Dark header with step indicators ── */}
       <View style={[styles.header, { backgroundColor: '#0f1c35' }]}>
         <View style={styles.headerLeft}>
           <Pressable onPress={() => step === 1 ? router.back() : setStep(1)}>
@@ -435,7 +501,6 @@ export default function CheckoutScreen() {
           </Pressable>
           <Text style={styles.headerTitle}>Commande</Text>
         </View>
-        {/* Step indicators */}
         <View style={styles.stepRow}>
           <StepDot n={1} current={step} />
           <View style={[styles.stepLine, step > 1 && styles.stepLineDone]} />
@@ -443,7 +508,6 @@ export default function CheckoutScreen() {
           <View style={[styles.stepLine, step > 2 && styles.stepLineDone]} />
           <StepDot n={3} current={step} />
         </View>
-        {/* Total badge */}
         <View style={styles.totalBadge}>
           <Text style={styles.totalBadgeText}>{total.toFixed(0)} MAD</Text>
         </View>
@@ -460,7 +524,6 @@ export default function CheckoutScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* ── Info alert ── */}
           <View style={styles.alert}>
             <AppIcon name="information-circle-outline" size={18} color="#4facff" />
             <Text style={styles.alertText}>
@@ -471,20 +534,8 @@ export default function CheckoutScreen() {
           </View>
 
           {step === 1 ? (
-            /* ── STEP 1: Delivery form ── */
-            <Step1Form
-              form={form}
-              setFirstName={setFirstName}
-              setLastName={setLastName}
-              setEmail={setEmail}
-              setPhone={setPhone}
-              setCity={setCity}
-              setAddress={setAddress}
-              colors={colors}
-              styles={styles}
-            />
+            <Step1Form ref={formRef} colors={colors} />
           ) : (
-            /* ── STEP 2: Payment + summary ── */
             <>
               {/* ── Delivery summary (locked) ── */}
               <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -493,10 +544,7 @@ export default function CheckoutScreen() {
                     <Text style={styles.cardStep}>ÉTAPE 1 — VALIDÉE</Text>
                     <Text style={styles.cardTitle}>Livraison</Text>
                   </View>
-                  <Pressable
-                    style={styles.editBtn}
-                    onPress={() => setStep(1)}
-                  >
+                  <Pressable style={styles.editBtn} onPress={() => setStep(1)}>
                     <AppIcon name="create-outline" size={15} color="#fff" />
                     <Text style={styles.editBtnText}>Modifier</Text>
                   </Pressable>
@@ -505,13 +553,13 @@ export default function CheckoutScreen() {
                   <AppIcon name="checkmark-circle" size={20} color="#10b981" />
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.confirmedName, { color: colors.foreground }]}>
-                      {form.firstName} {form.lastName}
+                      {confirmedForm.firstName} {confirmedForm.lastName}
                     </Text>
                     <Text style={[styles.confirmedDetail, { color: colors.mutedForeground }]}>
-                      {form.phone}  •  {form.city}
+                      {confirmedForm.phone}  •  {confirmedForm.city}
                     </Text>
                     <Text style={[styles.confirmedDetail, { color: colors.mutedForeground }]} numberOfLines={1}>
-                      {form.address}
+                      {confirmedForm.address}
                     </Text>
                   </View>
                 </View>
@@ -524,7 +572,6 @@ export default function CheckoutScreen() {
                   <Text style={styles.cardTitle}>Mode de paiement</Text>
                 </View>
                 <View style={styles.cardBody}>
-                  {/* COD */}
                   <Pressable
                     style={[
                       styles.payMethod,
@@ -557,7 +604,6 @@ export default function CheckoutScreen() {
                     </View>
                   </Pressable>
 
-                  {/* Online (disabled for now) */}
                   <View style={[styles.payMethod, styles.payMethodDisabled, { borderColor: colors.border }]}>
                     <View style={[styles.payIconWrap, { backgroundColor: colors.secondary }]}>
                       <AppIcon name="card-outline" size={26} color={colors.border} />
@@ -575,7 +621,6 @@ export default function CheckoutScreen() {
                     </View>
                   </View>
 
-                  {/* Policies checkbox */}
                   <Pressable style={styles.policies} onPress={() => setPoliciesAccepted(v => !v)}>
                     <View style={[
                       styles.checkbox,
@@ -671,7 +716,6 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottom
   StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
 
-    // Header
     header: {
       paddingTop: topPad + 10, paddingBottom: 14, paddingHorizontal: 16,
       flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -688,7 +732,6 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottom
 
     scroll: { padding: 16, gap: 14 },
 
-    // Alert
     alert: {
       flexDirection: 'row', alignItems: 'center', gap: 10,
       backgroundColor: 'rgba(79,172,255,0.08)',
@@ -698,7 +741,6 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottom
     },
     alertText: { flex: 1, fontSize: 13, fontFamily: 'Inter_500Medium', color: colors.foreground },
 
-    // Card
     card: { borderRadius: 16, borderWidth: 1, overflow: 'hidden' },
     cardHeader: {
       backgroundColor: '#0f1c35',
@@ -708,7 +750,6 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottom
     cardStep: { fontSize: 10, fontFamily: 'Inter_700Bold', color: '#4facff', letterSpacing: 1, marginBottom: 3 },
     cardTitle: { fontSize: 16, fontFamily: 'Inter_700Bold', color: '#fff' },
     cardBody: { padding: 16, gap: 14 },
-    row: { flexDirection: 'row', gap: 10 },
 
     editBtn: {
       flexDirection: 'row', alignItems: 'center', gap: 5,
@@ -717,15 +758,12 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottom
     },
     editBtnText: { fontSize: 13, fontFamily: 'Inter_700Bold', color: '#fff' },
 
-    // Step 1 locked summary
     summaryConfirm: {
-      flexDirection: 'row', alignItems: 'flex-start', gap: 12,
-      padding: 16,
+      flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 16,
     },
     confirmedName: { fontSize: 15, fontFamily: 'Inter_700Bold' },
     confirmedDetail: { fontSize: 13, fontFamily: 'Inter_400Regular', marginTop: 2 },
 
-    // Payment methods
     payMethod: {
       flexDirection: 'row', alignItems: 'center', gap: 14,
       borderWidth: 1.5, borderRadius: 12, padding: 14,
@@ -741,12 +779,9 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottom
     },
     payCheckActive: { borderColor: '#4facff' },
     payCheckDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#4facff' },
-    comingSoon: {
-      borderWidth: 1, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4,
-    },
+    comingSoon: { borderWidth: 1, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4 },
     comingSoonText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
 
-    // Policies
     policies: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
     checkbox: {
       width: 20, height: 20, borderRadius: 5, borderWidth: 2,
@@ -755,7 +790,6 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottom
     checkboxChecked: { backgroundColor: '#4facff', borderColor: '#4facff' },
     policiesText: { flex: 1, fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 20 },
 
-    // Order summary
     orderItem: { flexDirection: 'row', alignItems: 'center', gap: 10 },
     orderItemImg: { width: 52, height: 52, borderRadius: 8 },
     orderItemName: { fontSize: 13, fontFamily: 'Inter_600SemiBold' },
@@ -768,10 +802,7 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottom
     totalLabel: { fontSize: 16, fontFamily: 'Inter_700Bold' },
     totalValue: { fontSize: 20, fontFamily: 'Inter_700Bold' },
 
-    // Sticky bottom
-    stickyBottom: {
-      borderTopWidth: 1, paddingTop: 12, paddingHorizontal: 16,
-    },
+    stickyBottom: { borderTopWidth: 1, paddingTop: 12, paddingHorizontal: 16 },
     nextBtn: {
       flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
       gap: 10, borderRadius: 14, paddingVertical: 16,
@@ -780,7 +811,6 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottom
     },
     nextBtnText: { fontSize: 15, fontFamily: 'Inter_700Bold', color: '#fff' },
 
-    // Success screen
     successScroll: { alignItems: 'center', padding: 24 },
     successIconWrap: { marginTop: 24, marginBottom: 20 },
     successCircle: {

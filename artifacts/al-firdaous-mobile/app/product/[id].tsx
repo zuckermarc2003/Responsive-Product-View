@@ -1,13 +1,14 @@
 import { AppIcon } from '@/components/AppIcon';
 import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Dimensions,
   FlatList,
   Image,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -29,8 +30,9 @@ import { SkeletonCard } from '@/components/SkeletonCard';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useColors } from '@/hooks/useColors';
-import { useProduct, useRelated, useReviews } from '@/hooks/useProducts';
+import { useProduct, useRelated, useReviews, useAddReview } from '@/hooks/useProducts';
 import { getFinalPrice } from '@/constants/data';
+import { Review } from '@/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -43,7 +45,8 @@ export default function ProductDetailScreen() {
 
   const { data: product, isLoading: loadingProduct } = useProduct(id ?? '');
   const { data: related = [], isLoading: loadingRelated } = useRelated(id ?? '');
-  const { data: reviews = [] } = useReviews(id ?? '');
+  const { data: serverReviews = [] } = useReviews(id ?? '');
+  const addReviewMutation = useAddReview(id ?? '');
 
   const [imageIndex, setImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
@@ -53,14 +56,20 @@ export default function ProductDetailScreen() {
   const [reviewEmail, setReviewEmail] = useState('');
   const [reviewText, setReviewText] = useState('');
   const [reviewStars, setReviewStars] = useState(0);
-  const [submittingReview, setSubmittingReview] = useState(false);
-  const [localReviews, setLocalReviews] = useState(reviews);
+  // Optimistic local reviews that start from server data and allow adding
+  const [localReviews, setLocalReviews] = useState<Review[]>([]);
+
   const cartBtnScale = useSharedValue(1);
   const heartScale = useSharedValue(1);
 
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const bottomPad = Platform.OS === 'web' ? 34 : insets.bottom;
   const styles = makeStyles(colors, topPad, bottomPad);
+
+  // Sync reviews whenever server data changes (handles async load)
+  useEffect(() => {
+    setLocalReviews(serverReviews);
+  }, [serverReviews]);
 
   const inWishlist = product ? isInWishlist(product.id) : false;
 
@@ -87,30 +96,50 @@ export default function ProductDetailScreen() {
   const cartBtnStyle = useAnimatedStyle(() => ({ transform: [{ scale: cartBtnScale.value }] }));
   const heartStyle = useAnimatedStyle(() => ({ transform: [{ scale: heartScale.value }] }));
 
+  const closeReviewModal = useCallback(() => {
+    setShowReviewModal(false);
+    setReviewName('');
+    setReviewEmail('');
+    setReviewText('');
+    setReviewStars(0);
+  }, []);
+
   const handleSubmitReview = useCallback(async () => {
-    if (!reviewName.trim() || !reviewEmail.trim() || !reviewText.trim() || reviewStars === 0) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs et noter le produit.');
+    if (!reviewName.trim() || !reviewText.trim() || reviewStars === 0) {
+      Alert.alert('Erreur', 'Veuillez remplir le nom, votre avis et noter le produit.');
       return;
     }
-    setSubmittingReview(true);
-    try {
-      const newReview = {
-        id: `${Date.now()}`,
-        author: reviewName,
-        rating: reviewStars,
-        date: new Date().toLocaleDateString('fr-FR'),
-        comment: reviewText,
-      };
-      setLocalReviews(prev => [newReview, ...prev]);
-      setReviewName('');
-      setReviewEmail('');
-      setReviewText('');
-      setReviewStars(0);
-      setShowReviewModal(false);
-    } finally {
-      setSubmittingReview(false);
+    if (!reviewEmail.trim() || !reviewEmail.includes('@')) {
+      Alert.alert('Erreur', 'Veuillez entrer un email valide.');
+      return;
     }
-  }, [reviewName, reviewEmail, reviewText, reviewStars]);
+
+    // Optimistic update — show review immediately
+    const optimistic: Review = {
+      id: `local-${Date.now()}`,
+      author: reviewName.trim(),
+      email: reviewEmail.trim(),
+      rating: reviewStars,
+      date: new Date().toLocaleDateString('fr-FR'),
+      comment: reviewText.trim(),
+    };
+    setLocalReviews(prev => [optimistic, ...prev]);
+    closeReviewModal();
+
+    // Post to server in background
+    try {
+      await addReviewMutation.mutateAsync({
+        name: reviewName.trim(),
+        email: reviewEmail.trim(),
+        review: reviewText.trim(),
+        stars: reviewStars,
+        product: Number(id),
+        date: new Date().toISOString(),
+      });
+    } catch {
+      // Already shown optimistically — server will sync on next load
+    }
+  }, [reviewName, reviewEmail, reviewText, reviewStars, id, addReviewMutation, closeReviewModal]);
 
   if (loadingProduct) {
     return (
@@ -148,7 +177,7 @@ export default function ProductDetailScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* ── Image Gallery ── */}
         <View style={styles.galleryContainer}>
           <ScrollView
@@ -204,7 +233,7 @@ export default function ProductDetailScreen() {
             <View style={styles.ratingBox}>
               <AppIcon name="star" size={14} color={colors.starGold} />
               <Text style={styles.rating}>{product.rating}</Text>
-              <Text style={styles.reviewCount}>({product.reviewCount ?? reviews.length})</Text>
+              <Text style={styles.reviewCount}>({localReviews.length})</Text>
             </View>
           </View>
 
@@ -271,7 +300,7 @@ export default function ProductDetailScreen() {
           <View style={styles.reviewsHeader}>
             <Text style={styles.reviewsTitle}>Avis clients</Text>
             <View style={styles.overallRating}>
-              <Text style={styles.overallRatingNum}>{product.rating}</Text>
+              <Text style={styles.overallRatingNum}>{product.rating.toFixed(1)}</Text>
               <View>
                 <View style={styles.starsRow}>
                   {[1, 2, 3, 4, 5].map(s => (
@@ -293,7 +322,7 @@ export default function ProductDetailScreen() {
               <View key={review.id} style={styles.reviewCard}>
                 <View style={styles.reviewHeader}>
                   <View style={styles.reviewAvatar}>
-                    <Text style={styles.reviewAvatarText}>{review.author.charAt(0)}</Text>
+                    <Text style={styles.reviewAvatarText}>{review.author.charAt(0).toUpperCase()}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.reviewAuthor}>{review.author}</Text>
@@ -309,7 +338,12 @@ export default function ProductDetailScreen() {
               </View>
             ))
           ) : (
-            <Text style={[styles.reviewCountText, { textAlign: 'center', marginVertical: 16 }]}>Aucun avis pour le moment</Text>
+            <View style={styles.noReviews}>
+              <AppIcon name="chatbubble-outline" size={36} color={colors.border} />
+              <Text style={[styles.noReviewsText, { color: colors.mutedForeground }]}>
+                Soyez le premier à laisser un avis
+              </Text>
+            </View>
           )}
 
           <Pressable
@@ -317,84 +351,9 @@ export default function ProductDetailScreen() {
             onPress={() => setShowReviewModal(true)}
           >
             <AppIcon name="pencil-outline" size={16} color="#fff" />
-            <Text style={styles.addReviewBtnText}>Ajouter un avis</Text>
+            <Text style={styles.addReviewBtnText}>Laisser un avis</Text>
           </Pressable>
         </View>
-
-        {/* ── Review Modal ── */}
-        <Modal visible={showReviewModal} transparent animationType="slide" onRequestClose={() => setShowReviewModal(false)}>
-          <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.6)' }]}>
-            <View style={[styles.reviewFormContainer, { backgroundColor: colors.card }]}>
-              <View style={styles.modalHeader}>
-                <Text style={[styles.modalTitle, { color: colors.foreground }]}>Donner un avis</Text>
-                <Pressable onPress={() => setShowReviewModal(false)}>
-                  <AppIcon name="close" size={20} color={colors.foreground} />
-                </Pressable>
-              </View>
-
-              <ScrollView style={styles.reviewFormScroll} showsVerticalScrollIndicator={false}>
-                <Text style={[styles.formLabel, { color: colors.foreground }]}>Nom</Text>
-                <TextInput
-                  style={[styles.formInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
-                  placeholder="Votre nom"
-                  placeholderTextColor={colors.mutedForeground}
-                  value={reviewName}
-                  onChangeText={setReviewName}
-                  selectTextOnFocus={false}
-                />
-
-                <Text style={[styles.formLabel, { color: colors.foreground }]}>Email</Text>
-                <TextInput
-                  style={[styles.formInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
-                  placeholder="votre@email.com"
-                  placeholderTextColor={colors.mutedForeground}
-                  value={reviewEmail}
-                  onChangeText={setReviewEmail}
-                  keyboardType="email-address"
-                  selectTextOnFocus={false}
-                />
-
-                <Text style={[styles.formLabel, { color: colors.foreground }]}>Note</Text>
-                <View style={styles.starsInput}>
-                  {[1, 2, 3, 4, 5].map(s => (
-                    <Pressable key={s} onPress={() => setReviewStars(s)}>
-                      <AppIcon
-                        name={s <= reviewStars ? 'star' : 'star-outline'}
-                        size={32}
-                        color={s <= reviewStars ? colors.starGold : colors.border}
-                      />
-                    </Pressable>
-                  ))}
-                </View>
-
-                <Text style={[styles.formLabel, { color: colors.foreground }]}>Votre avis</Text>
-                <TextInput
-                  style={[styles.formTextarea, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
-                  placeholder="Partagez votre expérience..."
-                  placeholderTextColor={colors.mutedForeground}
-                  value={reviewText}
-                  onChangeText={setReviewText}
-                  multiline
-                  numberOfLines={4}
-                  selectTextOnFocus={false}
-                />
-
-                <View style={styles.formActions}>
-                  <Pressable
-                    style={[styles.submitBtn, { backgroundColor: colors.primary, opacity: submittingReview ? 0.6 : 1 }]}
-                    onPress={handleSubmitReview}
-                    disabled={submittingReview}
-                  >
-                    <Text style={styles.submitBtnText}>{submittingReview ? 'Envoi...' : 'Envoyer'}</Text>
-                  </Pressable>
-                  <Pressable style={[styles.cancelBtn, { borderColor: colors.border }]} onPress={() => setShowReviewModal(false)}>
-                    <Text style={[styles.cancelBtnText, { color: colors.foreground }]}>Annuler</Text>
-                  </Pressable>
-                </View>
-              </ScrollView>
-            </View>
-          </View>
-        </Modal>
 
         {/* ── Related Products ── */}
         {(loadingRelated || related.length > 0) && (
@@ -436,6 +395,102 @@ export default function ProductDetailScreen() {
           <Text style={styles.buyNowText}>Commander</Text>
         </Pressable>
       </View>
+
+      {/* ── Review Modal with proper keyboard handling ── */}
+      <Modal
+        visible={showReviewModal}
+        transparent
+        animationType="slide"
+        onRequestClose={closeReviewModal}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <Pressable style={styles.modalBackdrop} onPress={closeReviewModal} />
+          <View style={[styles.reviewFormContainer, { backgroundColor: colors.card }]}>
+            {/* Handle */}
+            <View style={styles.modalHandle} />
+
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.modalTitle, { color: colors.foreground }]}>Laisser un avis</Text>
+              <Pressable onPress={closeReviewModal} hitSlop={12}>
+                <AppIcon name="close" size={22} color={colors.foreground} />
+              </Pressable>
+            </View>
+
+            <ScrollView
+              style={styles.reviewFormScroll}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              {/* Star rating first — most important */}
+              <Text style={[styles.formLabel, { color: colors.foreground }]}>Note *</Text>
+              <View style={styles.starsInput}>
+                {[1, 2, 3, 4, 5].map(s => (
+                  <Pressable key={s} onPress={() => setReviewStars(s)} hitSlop={8}>
+                    <AppIcon
+                      name={s <= reviewStars ? 'star' : 'star-outline'}
+                      size={36}
+                      color={s <= reviewStars ? colors.starGold : colors.border}
+                    />
+                  </Pressable>
+                ))}
+              </View>
+
+              <Text style={[styles.formLabel, { color: colors.foreground }]}>Nom *</Text>
+              <TextInput
+                style={[styles.formInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
+                placeholder="Votre nom"
+                placeholderTextColor={colors.mutedForeground}
+                value={reviewName}
+                onChangeText={setReviewName}
+                autoCapitalize="words"
+              />
+
+              <Text style={[styles.formLabel, { color: colors.foreground }]}>Email *</Text>
+              <TextInput
+                style={[styles.formInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
+                placeholder="votre@email.com"
+                placeholderTextColor={colors.mutedForeground}
+                value={reviewEmail}
+                onChangeText={setReviewEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+
+              <Text style={[styles.formLabel, { color: colors.foreground }]}>Votre avis *</Text>
+              <TextInput
+                style={[styles.formTextarea, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
+                placeholder="Partagez votre expérience avec ce produit..."
+                placeholderTextColor={colors.mutedForeground}
+                value={reviewText}
+                onChangeText={setReviewText}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+
+              <View style={styles.formActions}>
+                <Pressable
+                  style={[styles.submitBtn, { backgroundColor: colors.primary, opacity: addReviewMutation.isPending ? 0.6 : 1 }]}
+                  onPress={handleSubmitReview}
+                  disabled={addReviewMutation.isPending}
+                >
+                  <Text style={styles.submitBtnText}>
+                    {addReviewMutation.isPending ? 'Envoi...' : 'Publier'}
+                  </Text>
+                </Pressable>
+                <Pressable style={[styles.cancelBtn, { borderColor: colors.border }]} onPress={closeReviewModal}>
+                  <Text style={[styles.cancelBtnText, { color: colors.foreground }]}>Annuler</Text>
+                </Pressable>
+              </View>
+
+              <View style={{ height: bottomPad + 20 }} />
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -502,6 +557,8 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottom
     },
     featureItem: { alignItems: 'center', gap: 6 },
     featureText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: colors.mutedForeground, textAlign: 'center' },
+
+    // Reviews
     reviewsSection: { padding: 20 },
     reviewsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
     reviewsTitle: { fontSize: 18, fontFamily: 'Inter_700Bold', color: colors.foreground },
@@ -509,6 +566,8 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottom
     overallRatingNum: { fontSize: 32, fontFamily: 'Inter_700Bold', color: colors.foreground },
     starsRow: { flexDirection: 'row', gap: 2 },
     reviewCountText: { fontSize: 11, fontFamily: 'Inter_400Regular', color: colors.mutedForeground, marginTop: 2 },
+    noReviews: { alignItems: 'center', paddingVertical: 24, gap: 10 },
+    noReviewsText: { fontSize: 14, fontFamily: 'Inter_400Regular', textAlign: 'center' },
     reviewCard: {
       backgroundColor: colors.card, borderRadius: 14, padding: 14, marginBottom: 10,
       shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
@@ -527,31 +586,12 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottom
       marginTop: 16, paddingVertical: 14, borderRadius: 12,
     },
     addReviewBtnText: { color: '#fff', fontSize: 14, fontFamily: 'Inter_700Bold' },
-    modalOverlay: { flex: 1, justifyContent: 'flex-end' },
-    reviewFormContainer: {
-      borderTopLeftRadius: 20, borderTopRightRadius: 20,
-      paddingHorizontal: 16, paddingBottom: 24, maxHeight: '85%',
-    },
-    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
-    modalTitle: { fontSize: 18, fontFamily: 'Inter_700Bold' },
-    reviewFormScroll: { marginVertical: 16 },
-    formLabel: { fontSize: 13, fontFamily: 'Inter_700Bold', marginBottom: 8, marginTop: 12 },
-    formInput: {
-      borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12,
-      fontFamily: 'Inter_400Regular', fontSize: 14,
-    },
-    formTextarea: {
-      borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12,
-      fontFamily: 'Inter_400Regular', fontSize: 14, textAlignVertical: 'top',
-    },
-    starsInput: { flexDirection: 'row', gap: 12, marginBottom: 16 },
-    formActions: { flexDirection: 'row', gap: 10, marginTop: 20, marginBottom: bottomPad + 16 },
-    submitBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-    submitBtnText: { color: '#fff', fontSize: 14, fontFamily: 'Inter_700Bold' },
-    cancelBtn: { flex: 1, borderWidth: 1.5, borderRadius: 12, alignItems: 'center', justifyContent: 'center', paddingVertical: 14 },
-    cancelBtnText: { fontSize: 14, fontFamily: 'Inter_700Bold' },
+
+    // Related
     relatedSection: { marginBottom: 16 },
     relatedTitle: { fontSize: 18, fontFamily: 'Inter_700Bold', color: colors.foreground, paddingHorizontal: 16, marginBottom: 12 },
+
+    // CTA
     cta: {
       flexDirection: 'row', gap: 10, padding: 16, paddingTop: 12,
       backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.border,
@@ -568,4 +608,40 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottom
       alignItems: 'center', justifyContent: 'center',
     },
     buyNowText: { color: colors.primary, fontSize: 14, fontFamily: 'Inter_700Bold' },
+
+    // Review Modal
+    modalOverlay: { flex: 1, justifyContent: 'flex-end' },
+    modalBackdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.55)',
+    },
+    reviewFormContainer: {
+      borderTopLeftRadius: 24, borderTopRightRadius: 24,
+      paddingHorizontal: 20, maxHeight: '90%',
+    },
+    modalHandle: {
+      width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border,
+      alignSelf: 'center', marginTop: 12, marginBottom: 4,
+    },
+    modalHeader: {
+      flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+      paddingVertical: 16, borderBottomWidth: 1,
+    },
+    modalTitle: { fontSize: 18, fontFamily: 'Inter_700Bold' },
+    reviewFormScroll: { paddingTop: 8 },
+    formLabel: { fontSize: 13, fontFamily: 'Inter_700Bold', marginBottom: 8, marginTop: 16 },
+    formInput: {
+      borderWidth: 1.5, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12,
+      fontFamily: 'Inter_400Regular', fontSize: 14,
+    },
+    formTextarea: {
+      borderWidth: 1.5, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12,
+      fontFamily: 'Inter_400Regular', fontSize: 14, minHeight: 100,
+    },
+    starsInput: { flexDirection: 'row', gap: 10, marginBottom: 8 },
+    formActions: { flexDirection: 'row', gap: 12, marginTop: 24 },
+    submitBtn: { flex: 2, paddingVertical: 15, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+    submitBtnText: { color: '#fff', fontSize: 15, fontFamily: 'Inter_700Bold' },
+    cancelBtn: { flex: 1, borderWidth: 1.5, borderRadius: 12, alignItems: 'center', justifyContent: 'center', paddingVertical: 15 },
+    cancelBtnText: { fontSize: 14, fontFamily: 'Inter_700Bold' },
   });
