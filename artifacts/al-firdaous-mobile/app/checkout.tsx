@@ -125,9 +125,9 @@ const fieldS = StyleSheet.create({
 });
 
 // ── City picker modal ─────────────────────────────────────────────────────────
-function CityPicker({
+const CityPicker = React.memo(({
   value, onSelect, colors,
-}: { value: string; onSelect: (c: string) => void; colors: any }) {
+}: { value: string; onSelect: (c: string) => void; colors: any }) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const filtered = MOROCCAN_CITIES.filter(c =>
@@ -165,7 +165,7 @@ function CityPicker({
                 autoFocus
               />
             </View>
-            <ScrollView style={{ maxHeight: 320 }} showsVerticalScrollIndicator={false}>
+            <ScrollView style={pickerS.scrollView} nestedScrollEnabled showsVerticalScrollIndicator={true}>
               {filtered.map(city => (
                 <Pressable
                   key={city}
@@ -186,7 +186,7 @@ function CityPicker({
       )}
     </>
   );
-}
+});
 const pickerS = StyleSheet.create({
   wrap: { gap: 5 },
   label: { fontSize: 11, fontFamily: 'Inter_700Bold', letterSpacing: 0.8, textTransform: 'uppercase' },
@@ -202,7 +202,7 @@ const pickerS = StyleSheet.create({
   },
   sheet: {
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 20, paddingBottom: 40,
+    padding: 20, paddingBottom: 40, height: '80%',
   },
   sheetTitle: { fontSize: 17, fontFamily: 'Inter_700Bold', marginBottom: 14, textAlign: 'center' },
   search: {
@@ -210,6 +210,7 @@ const pickerS = StyleSheet.create({
     borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 10,
   },
   searchInput: { flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular', padding: 0 },
+  scrollView: { maxHeight: 400, flex: 1 },
   cityRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingVertical: 14, paddingHorizontal: 4, borderBottomWidth: 1,
@@ -219,7 +220,7 @@ const pickerS = StyleSheet.create({
 
 // ── Step 1 Form (memoized to prevent re-renders) ──────────────────────────────
 const Step1Form = React.memo(({
-  form, errors, setFirstName, setLastName, setEmail, setPhone, setCity, setAddress, colors, styles,
+  form, setFirstName, setLastName, setEmail, setPhone, setCity, setAddress, colors, styles,
 }: any) => (
   <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
     <View style={styles.cardHeader}>
@@ -235,7 +236,6 @@ const Step1Form = React.memo(({
             value={form.firstName}
             onChangeText={setFirstName}
             placeholder="Mohamed"
-            error={errors.firstName}
           />
         </View>
         <View style={{ flex: 1 }}>
@@ -245,7 +245,6 @@ const Step1Form = React.memo(({
             value={form.lastName}
             onChangeText={setLastName}
             placeholder="Alami"
-            error={errors.lastName}
           />
         </View>
       </View>
@@ -268,7 +267,6 @@ const Step1Form = React.memo(({
         placeholder="+212 6XX XXX XXX"
         keyboardType="phone-pad"
         autoCapitalize="none"
-        error={errors.phone}
       />
 
       <CityPicker
@@ -276,9 +274,6 @@ const Step1Form = React.memo(({
         onSelect={setCity}
         colors={colors}
       />
-      {errors.city && (
-        <Text style={fieldS.error}>{errors.city}</Text>
-      )}
 
       <Field
         label="Adresse complète"
@@ -286,7 +281,6 @@ const Step1Form = React.memo(({
         value={form.address}
         onChangeText={setAddress}
         placeholder="Rue, quartier, numéro..."
-        error={errors.address}
       />
     </View>
   </View>
@@ -479,7 +473,6 @@ export default function CheckoutScreen() {
             /* ── STEP 1: Delivery form ── */
             <Step1Form
               form={form}
-              errors={errors}
               setFirstName={setFirstName}
               setLastName={setLastName}
               setEmail={setEmail}
