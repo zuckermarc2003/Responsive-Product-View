@@ -57,8 +57,8 @@ export default function ProductDetailScreen() {
   const [reviewEmail, setReviewEmail] = useState('');
   const [reviewText, setReviewText] = useState('');
   const [reviewStars, setReviewStars] = useState(0);
-  // Optimistic local reviews that start from server data and allow adding
-  const [localReviews, setLocalReviews] = useState<Review[]>([]);
+  // Optimistic UI-only additions (server reviews come from API response)
+  const [optimisticReviews, setOptimisticReviews] = useState<Review[]>([]);
 
   const cartBtnScale = useSharedValue(1);
   const heartScale = useSharedValue(1);
@@ -67,10 +67,8 @@ export default function ProductDetailScreen() {
   const bottomPad = Platform.OS === 'web' ? 34 : insets.bottom;
   const styles = makeStyles(colors, topPad, bottomPad);
 
-  // Sync reviews whenever server data changes (handles async load)
-  useEffect(() => {
-    setLocalReviews(serverReviews);
-  }, [serverReviews]);
+  // Combine server reviews with optimistic local additions
+  const allReviews = [...serverReviews, ...optimisticReviews];
 
   const inWishlist = product ? isInWishlist(product.id) : false;
 
@@ -124,7 +122,7 @@ export default function ProductDetailScreen() {
       date: new Date().toLocaleDateString('fr-FR'),
       comment: reviewText.trim(),
     };
-    setLocalReviews(prev => [optimistic, ...prev]);
+    setOptimisticReviews(prev => [optimistic, ...prev]);
     closeReviewModal();
 
     // Post to server in background
@@ -312,13 +310,13 @@ export default function ProductDetailScreen() {
                     />
                   ))}
                 </View>
-                <Text style={styles.reviewCountText}>{localReviews.length} avis</Text>
+                <Text style={styles.reviewCountText}>{allReviews.length} avis</Text>
               </View>
             </View>
           </View>
 
-          {localReviews.length > 0 ? (
-            localReviews.map(review => (
+          {allReviews.length > 0 ? (
+            allReviews.map(review => (
               <View key={review.id} style={styles.reviewCard}>
                 <View style={styles.reviewHeader}>
                   <View style={styles.reviewAvatar}>
