@@ -3,7 +3,6 @@ import { router } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
   Image,
   Platform,
   Pressable,
@@ -135,22 +134,16 @@ export default function HomeScreen() {
                 <Text style={styles.seeAll}>{t.seeAll}</Text>
               </Pressable>
             </View>
-            {isLoading ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
-                {[1, 2, 3].map(i => <SkeletonCard key={i} width={CARD_WIDTH} />)}
-              </ScrollView>
-            ) : (
-              <FlatList
-                data={newArrivals}
-                horizontal
-                keyExtractor={item => item.id}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.horizontalList}
-                renderItem={({ item }) => <ProductCard product={item} variant="carousel" />}
-                ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
-                scrollEnabled={newArrivals.length > 0}
-              />
-            )}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
+              {isLoading
+                ? [1, 2, 3].map(i => <SkeletonCard key={i} width={CARD_WIDTH} />)
+                : newArrivals.map((item, index) => (
+                    <React.Fragment key={item.id}>
+                      {index > 0 && <View style={{ width: 12 }} />}
+                      <ProductCard product={item} variant="carousel" />
+                    </React.Fragment>
+                  ))}
+            </ScrollView>
           </>
         )}
 
@@ -170,22 +163,16 @@ export default function HomeScreen() {
                 <Text style={styles.seeAll}>{t.seeAll}</Text>
               </Pressable>
             </View>
-            {isLoading ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
-                {[1, 2, 3].map(i => <SkeletonCard key={i} width={CARD_WIDTH} />)}
-              </ScrollView>
-            ) : (
-              <FlatList
-                data={onSale}
-                horizontal
-                keyExtractor={item => item.id}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.horizontalList}
-                renderItem={({ item }) => <ProductCard product={item} variant="carousel" />}
-                ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
-                scrollEnabled={onSale.length > 0}
-              />
-            )}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
+              {isLoading
+                ? [1, 2, 3].map(i => <SkeletonCard key={i} width={CARD_WIDTH} />)
+                : onSale.map((item, index) => (
+                    <React.Fragment key={item.id}>
+                      {index > 0 && <View style={{ width: 12 }} />}
+                      <ProductCard product={item} variant="carousel" />
+                    </React.Fragment>
+                  ))}
+            </ScrollView>
           </>
         )}
 

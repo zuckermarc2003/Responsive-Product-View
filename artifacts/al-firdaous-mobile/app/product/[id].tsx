@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   Alert,
   Dimensions,
-  FlatList,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -231,7 +230,7 @@ export default function ProductDetailScreen() {
             <View style={styles.ratingBox}>
               <AppIcon name="star" size={14} color={colors.starGold} />
               <Text style={styles.rating}>{product.rating}</Text>
-              <Text style={styles.reviewCount}>({localReviews.length})</Text>
+              <Text style={styles.reviewCount}>({allReviews.length})</Text>
             </View>
           </View>
 
@@ -357,20 +356,13 @@ export default function ProductDetailScreen() {
         {(loadingRelated || related.length > 0) && (
           <View style={styles.relatedSection}>
             <Text style={styles.relatedTitle}>Produits similaires</Text>
-            {loadingRelated ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}>
-                {[1, 2, 3].map(i => <SkeletonCard key={i} width={172} />)}
-              </ScrollView>
-            ) : (
-              <FlatList
-                data={related}
-                horizontal
-                keyExtractor={p => p.id}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
-                renderItem={({ item }) => <ProductCard product={item} variant="carousel" />}
-              />
-            )}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}>
+              {loadingRelated
+                ? [1, 2, 3].map(i => <SkeletonCard key={i} width={172} />)
+                : related.map(item => (
+                    <ProductCard key={item.id} product={item} variant="carousel" />
+                  ))}
+            </ScrollView>
           </View>
         )}
 
