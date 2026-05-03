@@ -1,4 +1,12 @@
 import { AppIcon } from '@/components/AppIcon';
+import { ProductCard } from '@/components/ProductCard';
+import { SkeletonCard } from '@/components/SkeletonCard';
+import { CATEGORIES } from '@/constants/data';
+import { useLanguage } from '@/context/LanguageContext';
+import { useColors } from '@/hooks/useColors';
+import { useProducts } from '@/hooks/useProducts';
+import { Product } from '@/types';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
   Dimensions,
@@ -12,17 +20,9 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ProductCard } from '@/components/ProductCard';
-import { SkeletonCard } from '@/components/SkeletonCard';
-import { useLanguage } from '@/context/LanguageContext';
-import { useColors } from '@/hooks/useColors';
-import { useProducts } from '@/hooks/useProducts';
-import { CATEGORIES } from '@/constants/data';
-import { Product } from '@/types';
 
 type SortKey = 'default' | 'price_asc' | 'price_desc' | 'rating';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SW } = Dimensions.get('window');
 
 export default function CatalogScreen() {
   const colors = useColors();
@@ -35,8 +35,13 @@ export default function CatalogScreen() {
   const [promoOnly, setPromoOnly] = useState(false);
 
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
-  const cardWidth = (SCREEN_WIDTH - 48) / 2;
-  const styles = makeStyles(colors, topPad);
+  const cardWidth = (SW - 48) / 2;
+  const isDark = colors.background === '#0f172a';
+  const bg = isDark ? '#0a0a14' : '#f8f7f4';
+  const cardBg = isDark ? '#141424' : '#fff';
+  const textCol = isDark ? '#f9fafb' : '#111827';
+  const mutedCol = isDark ? '#64748b' : '#6b7280';
+  const borderCol = isDark ? '#1e293b' : '#e5e7eb';
 
   const SORT_OPTIONS: { key: SortKey; label: string }[] = [
     { key: 'default', label: t.sortDefault },
@@ -46,18 +51,11 @@ export default function CatalogScreen() {
   ];
 
   const catLabels: Record<string, string> = {
-    all: t.catAll,
-    Shoe: t.catShoe,
-    Sandal: t.catSandal,
-    Shirt: t.catShirt,
-    Pant: t.catPant,
+    all: t.catAll, Shoe: t.catShoe, Sandal: t.catSandal, Shirt: t.catShirt, Pant: t.catPant,
   };
 
   const { data: products = [], isLoading, error, refetch } = useProducts({
-    category: selectedCat,
-    search: query,
-    sort,
-    promo: promoOnly,
+    category: selectedCat, search: query, sort, promo: promoOnly,
   });
 
   const renderProduct = ({ item }: { item: Product }) => (
@@ -67,82 +65,94 @@ export default function CatalogScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      {/* ── Header ── */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t.catalogue}</Text>
-        <Pressable style={styles.sortBtn} onPress={() => setShowSort(v => !v)}>
-          <AppIcon name="options-outline" size={20} color={colors.primary} />
-          <Text style={styles.sortBtnText}>{t.sort}</Text>
-        </Pressable>
-      </View>
+    <View style={{ flex: 1, backgroundColor: bg }}>
 
-      {/* ── Sort dropdown ── */}
+      {/* ── Header ── */}
+      <LinearGradient
+        colors={isDark ? ['#0a0a14', '#0d1a2e'] : ['#0d1a2e', '#0d2244']}
+        style={[styles.header, { paddingTop: topPad + 10 }]}
+      >
+        <View>
+          <Text style={styles.headerEyebrow}>AL-FIRDAOUS STORE</Text>
+          <Text style={styles.headerTitle}>Boutique</Text>
+        </View>
+        <Pressable style={styles.sortTrigger} onPress={() => setShowSort(v => !v)}>
+          <AppIcon name="options-outline" size={18} color="#C9A84C" />
+          <Text style={styles.sortTriggerText}>{t.sort}</Text>
+          <AppIcon name="chevron-down" size={14} color="#C9A84C" />
+        </Pressable>
+      </LinearGradient>
+
+      {/* ── Sort Sheet ── */}
       {showSort && (
-        <View style={styles.sortDropdown}>
-          {SORT_OPTIONS.map(opt => (
+        <View style={[styles.sortSheet, { backgroundColor: cardBg, borderColor: borderCol }]}>
+          {SORT_OPTIONS.map((opt, i) => (
             <Pressable
               key={opt.key}
-              style={[styles.sortOption, sort === opt.key && styles.sortOptionActive]}
+              style={[
+                styles.sortRow,
+                i < SORT_OPTIONS.length - 1 && { borderBottomWidth: 1, borderBottomColor: borderCol },
+                sort === opt.key && { backgroundColor: isDark ? '#0d1a2e' : '#f0f8ff' },
+              ]}
               onPress={() => { setSort(opt.key); setShowSort(false); }}
             >
-              <Text style={[styles.sortOptionText, sort === opt.key && styles.sortOptionTextActive]}>
+              <Text style={[styles.sortRowText, { color: sort === opt.key ? '#C9A84C' : textCol }]}>
                 {opt.label}
               </Text>
-              {sort === opt.key && <AppIcon name="checkmark" size={16} color={colors.primary} />}
+              {sort === opt.key && <AppIcon name="checkmark-circle" size={18} color="#C9A84C" />}
             </Pressable>
           ))}
         </View>
       )}
 
       {/* ── Search ── */}
-      <View style={styles.searchBar}>
-        <AppIcon name="search-outline" size={18} color={colors.mutedForeground} />
+      <View style={[styles.searchWrap, { backgroundColor: cardBg, borderColor: borderCol }]}>
+        <AppIcon name="search-outline" size={18} color={mutedCol} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: textCol }]}
           value={query}
           onChangeText={setQuery}
           placeholder={t.searchPlaceholder}
-          placeholderTextColor={colors.mutedForeground}
+          placeholderTextColor={mutedCol}
           returnKeyType="search"
         />
         {query.length > 0 && (
           <Pressable onPress={() => setQuery('')}>
-            <AppIcon name="close-circle" size={18} color={colors.mutedForeground} />
+            <AppIcon name="close-circle" size={18} color={mutedCol} />
           </Pressable>
         )}
       </View>
 
-      {/* ── Categories ── */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.catScroll}>
+      {/* ── Category Pills ── */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.catRow}>
         {CATEGORIES.map(cat => {
           const active = selectedCat === cat.key;
-          const label = catLabels[cat.key];
           return (
             <Pressable
               key={cat.key}
-              style={[styles.catPill, active && styles.catPillActive]}
+              style={[styles.catPill, active && styles.catPillActive, { borderColor: active ? '#C9A84C' : borderCol }]}
               onPress={() => setSelectedCat(cat.key)}
             >
-              <Text style={[styles.catPillText, active && styles.catPillTextActive]} numberOfLines={1}>
-                {label}
+              <Text style={[styles.catPillText, { color: active ? '#0d1a2e' : mutedCol }]}>
+                {catLabels[cat.key]}
               </Text>
             </Pressable>
           );
         })}
         <Pressable
-          style={[styles.catPill, promoOnly && styles.catPillActive]}
+          style={[styles.catPill, promoOnly && styles.catPillActive, { borderColor: promoOnly ? '#ef4444' : borderCol, backgroundColor: promoOnly ? '#ef4444' : 'transparent' }]}
           onPress={() => setPromoOnly(v => !v)}
         >
-          <AppIcon name="flash" size={13} color={promoOnly ? '#fff' : colors.promoBadge} />
-          <Text style={[styles.catPillText, promoOnly && styles.catPillTextActive]}>{t.promos}</Text>
+          <AppIcon name="flash" size={13} color={promoOnly ? '#fff' : '#ef4444'} />
+          <Text style={[styles.catPillText, { color: promoOnly ? '#fff' : '#ef4444' }]}>{t.promos}</Text>
         </Pressable>
       </ScrollView>
 
-      {/* ── Results count ── */}
+      {/* ── Result count ── */}
       {!isLoading && (
-        <View style={styles.resultRow}>
-          <Text style={styles.resultCount}>{t.productCount(products.length)}</Text>
+        <View style={styles.countRow}>
+          <View style={styles.countDot} />
+          <Text style={[styles.countText, { color: mutedCol }]}>{t.productCount(products.length)}</Text>
         </View>
       )}
 
@@ -152,12 +162,14 @@ export default function CatalogScreen() {
           {[1, 2, 3, 4].map(i => <SkeletonCard key={i} width={cardWidth} />)}
         </View>
       ) : error ? (
-        <View style={styles.errorContainer}>
-          <AppIcon name="wifi-outline" size={48} color={colors.border} />
-          <Text style={styles.errorTitle}>{t.connectionError}</Text>
-          <Text style={styles.errorText}>{t.loadingError}</Text>
-          <Pressable style={[styles.retryBtn, { backgroundColor: colors.primary }]} onPress={() => refetch()}>
-            <Text style={styles.retryBtnText}>{t.retry}</Text>
+        <View style={styles.errorWrap}>
+          <View style={styles.errorIcon}>
+            <AppIcon name="wifi-outline" size={36} color="#C9A84C" />
+          </View>
+          <Text style={[styles.errorTitle, { color: textCol }]}>{t.connectionError}</Text>
+          <Text style={[styles.errorSub, { color: mutedCol }]}>{t.loadingError}</Text>
+          <Pressable style={styles.retryBtn} onPress={() => refetch()}>
+            <Text style={styles.retryText}>{t.retry}</Text>
           </Pressable>
         </View>
       ) : (
@@ -165,75 +177,88 @@ export default function CatalogScreen() {
           data={products}
           keyExtractor={item => item.id}
           numColumns={2}
-          contentContainerStyle={styles.list}
-          columnWrapperStyle={styles.columnWrapper}
+          contentContainerStyle={styles.grid}
+          columnWrapperStyle={styles.gridRow}
           showsVerticalScrollIndicator={false}
           renderItem={renderProduct}
           ListEmptyComponent={
-            <View style={styles.empty}>
-              <AppIcon name="search-outline" size={48} color={colors.border} />
-              <Text style={styles.emptyTitle}>{t.noProducts}</Text>
-              <Text style={styles.emptyText}>{t.trySearch}</Text>
+            <View style={styles.emptyWrap}>
+              <Text style={styles.emptyEmoji}>🔍</Text>
+              <Text style={[styles.emptyTitle, { color: textCol }]}>{t.noProducts}</Text>
+              <Text style={[styles.emptySub, { color: mutedCol }]}>{t.trySearch}</Text>
             </View>
           }
-          ListFooterComponent={<View style={{ height: Platform.OS === 'web' ? 34 : insets.bottom + 80 }} />}
+          ListFooterComponent={<View style={{ height: Platform.OS === 'web' ? 34 : insets.bottom + 90 }} />}
         />
       )}
     </View>
   );
 }
 
-const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number) =>
-  StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
-    header: {
-      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-      paddingTop: topPad + 12, paddingBottom: 12, paddingHorizontal: 16,
-      backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.border,
-    },
-    headerTitle: { fontSize: 20, fontFamily: 'Inter_700Bold', color: colors.foreground },
-    sortBtn: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-    sortBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: colors.primary },
-    sortDropdown: {
-      backgroundColor: colors.card, marginHorizontal: 16, borderRadius: 12,
-      borderWidth: 1, borderColor: colors.border,
-      shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8,
-      elevation: 8, zIndex: 100,
-    },
-    sortOption: {
-      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-      padding: 14, borderBottomWidth: 1, borderBottomColor: colors.border,
-    },
-    sortOptionActive: { backgroundColor: colors.secondary },
-    sortOptionText: { fontSize: 14, fontFamily: 'Inter_500Medium', color: colors.foreground },
-    sortOptionTextActive: { color: colors.primary, fontFamily: 'Inter_700Bold' },
-    searchBar: {
-      flexDirection: 'row', alignItems: 'center',
-      marginHorizontal: 16, marginTop: 12, marginBottom: 4,
-      backgroundColor: colors.card, borderRadius: 12,
-      borderWidth: 1, borderColor: colors.border,
-      paddingHorizontal: 14, paddingVertical: 10, gap: 10,
-    },
-    searchInput: { flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular', color: colors.foreground, padding: 0 },
-    catScroll: { paddingHorizontal: 16, gap: 8, paddingVertical: 10 },
-    catPill: {
-      paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20,
-      backgroundColor: colors.card, borderWidth: 1.5, borderColor: colors.border,
-    },
-    catPillActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-    catPillText: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: colors.mutedForeground, textAlign: 'center' },
-    catPillTextActive: { color: '#fff' },
-    resultRow: { paddingHorizontal: 16, paddingBottom: 8 },
-    resultCount: { fontSize: 12, fontFamily: 'Inter_500Medium', color: colors.mutedForeground },
-    list: { paddingHorizontal: 12, paddingTop: 4 },
-    columnWrapper: { gap: 12, marginBottom: 12 },
-    skeletonGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 12, paddingTop: 8, gap: 12 },
-    errorContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32, marginTop: 60 },
-    errorTitle: { fontSize: 18, fontFamily: 'Inter_700Bold', color: colors.foreground },
-    errorText: { fontSize: 14, fontFamily: 'Inter_400Regular', color: colors.mutedForeground, textAlign: 'center' },
-    retryBtn: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12, marginTop: 8 },
-    retryBtnText: { color: '#fff', fontSize: 14, fontFamily: 'Inter_700Bold' },
-    empty: { alignItems: 'center', paddingTop: 60, gap: 10 },
-    emptyTitle: { fontSize: 17, fontFamily: 'Inter_700Bold', color: colors.foreground },
-    emptyText: { fontSize: 14, fontFamily: 'Inter_400Regular', color: colors.mutedForeground },
-  });
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between',
+    paddingBottom: 18, paddingHorizontal: 18,
+  },
+  headerEyebrow: { color: '#C9A84C', fontSize: 9, fontFamily: 'Inter_700Bold', letterSpacing: 2, marginBottom: 3 },
+  headerTitle: { color: '#fff', fontSize: 26, fontFamily: 'Inter_700Bold' },
+  sortTrigger: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: 'rgba(201,168,76,0.15)', borderRadius: 20,
+    paddingHorizontal: 14, paddingVertical: 8,
+    borderWidth: 1, borderColor: 'rgba(201,168,76,0.35)',
+  },
+  sortTriggerText: { color: '#C9A84C', fontSize: 13, fontFamily: 'Inter_700Bold' },
+
+  sortSheet: {
+    marginHorizontal: 14, borderRadius: 14, borderWidth: 1,
+    overflow: 'hidden', zIndex: 99,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.15, shadowRadius: 12,
+    elevation: 10,
+  },
+  sortRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18, paddingVertical: 15 },
+  sortRowText: { fontSize: 15, fontFamily: 'Inter_500Medium' },
+
+  searchWrap: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    marginHorizontal: 14, marginTop: 12,
+    borderRadius: 14, borderWidth: 1.5,
+    paddingHorizontal: 14, paddingVertical: 12,
+  },
+  searchInput: { flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular', padding: 0 },
+
+  catRow: { paddingHorizontal: 14, gap: 8, paddingVertical: 12 },
+  catPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 16, paddingVertical: 9, borderRadius: 24,
+    borderWidth: 1.5,
+  },
+  catPillActive: { backgroundColor: '#C9A84C' },
+  catPillText: { fontSize: 13, fontFamily: 'Inter_600SemiBold' },
+
+  countRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 18, marginBottom: 8 },
+  countDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#C9A84C' },
+  countText: { fontSize: 12, fontFamily: 'Inter_500Medium' },
+
+  grid: { paddingHorizontal: 14, paddingTop: 4 },
+  gridRow: { gap: 12, marginBottom: 12 },
+  skeletonGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 14, paddingTop: 4, gap: 12 },
+
+  errorWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14, paddingHorizontal: 32, marginTop: 60 },
+  errorIcon: {
+    width: 72, height: 72, borderRadius: 36,
+    backgroundColor: 'rgba(201,168,76,0.12)', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: 'rgba(201,168,76,0.3)',
+  },
+  errorTitle: { fontSize: 18, fontFamily: 'Inter_700Bold' },
+  errorSub: { fontSize: 14, fontFamily: 'Inter_400Regular', textAlign: 'center' },
+  retryBtn: {
+    backgroundColor: '#C9A84C', borderRadius: 25, paddingHorizontal: 28, paddingVertical: 13, marginTop: 4,
+  },
+  retryText: { color: '#0d1a2e', fontSize: 14, fontFamily: 'Inter_700Bold' },
+
+  emptyWrap: { alignItems: 'center', paddingTop: 60, gap: 10 },
+  emptyEmoji: { fontSize: 48 },
+  emptyTitle: { fontSize: 18, fontFamily: 'Inter_700Bold' },
+  emptySub: { fontSize: 14, fontFamily: 'Inter_400Regular' },
+});
