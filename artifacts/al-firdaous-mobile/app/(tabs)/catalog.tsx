@@ -117,14 +117,15 @@ export default function CatalogScreen() {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.catScroll}>
         {CATEGORIES.map(cat => {
           const active = selectedCat === cat.key;
+          const label = catLabels[cat.key];
           return (
             <Pressable
               key={cat.key}
               style={[styles.catPill, active && styles.catPillActive]}
               onPress={() => setSelectedCat(cat.key)}
             >
-              <Text style={[styles.catPillText, active && styles.catPillTextActive]}>
-                {catLabels[cat.key] ?? cat.label}
+              <Text style={[styles.catPillText, active && styles.catPillTextActive]} numberOfLines={1}>
+                {label}
               </Text>
             </Pressable>
           );

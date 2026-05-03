@@ -241,13 +241,13 @@ export async function fetchRelated(productId: string): Promise<Product[]> {
 // ── Reviews ────────────────────────────────────────────────
 
 export async function fetchReviews(productId: string): Promise<Review[]> {
-  if (!BASE_URL) return MOCK_REVIEWS;
+  if (!BASE_URL) return [];
   try {
     const raw = await httpGet<ApiReview[]>(`/reviews/get?product_id=${productId}`);
-    return Array.isArray(raw) ? raw.map(normalizeReview) : MOCK_REVIEWS;
+    return Array.isArray(raw) ? raw.map(normalizeReview) : [];
   } catch (e) {
-    console.warn("[api] fetchReviews failed, using mock data:", e);
-    return MOCK_REVIEWS;
+    console.warn("[api] fetchReviews failed:", e);
+    return [];
   }
 }
 
