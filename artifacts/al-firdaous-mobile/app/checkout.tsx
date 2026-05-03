@@ -219,7 +219,7 @@ const pickerS = StyleSheet.create({
 
 // ── Step 1 Form (memoized to prevent re-renders) ──────────────────────────────
 const Step1Form = React.memo(({
-  form, errors, setFirstName, setLastName, setEmail, setPhone, setCity, setAddress, colors,
+  form, errors, setFirstName, setLastName, setEmail, setPhone, setCity, setAddress, colors, styles,
 }: any) => (
   <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
     <View style={styles.cardHeader}>
@@ -487,6 +487,7 @@ export default function CheckoutScreen() {
               setCity={setCity}
               setAddress={setAddress}
               colors={colors}
+              styles={styles}
             />
           ) : (
             /* ── STEP 2: Payment + summary ── */
