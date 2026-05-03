@@ -193,8 +193,8 @@ export async function fetchProduct(id: string): Promise<{ product: Product | nul
     return { product: p ?? null, reviews: [] };
   }
   try {
-    // Web endpoint: api/product/search/get returns { product, reviews, products }
-    const res = await httpGet<ProductDetailResponse>(`/api/product/search/get?id=${id}`);
+    // Web endpoint: product/search/get returns { product, reviews, products }
+    const res = await httpGet<ProductDetailResponse>(`/product/search/get?id=${id}`);
     const product = res.product ? normalizeProduct(res.product) : null;
     const reviews = (res.reviews ?? []).map(normalizeReview);
     return { product, reviews };

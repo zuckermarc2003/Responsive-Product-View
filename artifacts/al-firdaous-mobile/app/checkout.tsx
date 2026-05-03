@@ -216,9 +216,9 @@ const pickerS = StyleSheet.create({
   },
   val: { flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular' },
   backdrop: {
-    position: 'absolute', top: -1000, left: 0, right: 0, bottom: -1000,
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 999,
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-end', flex: 1,
   },
   sheet: {
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
