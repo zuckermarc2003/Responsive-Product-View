@@ -105,6 +105,7 @@ const Field = React.memo(({
           placeholderTextColor={colors.mutedForeground}
           keyboardType={keyboardType ?? 'default'}
           autoCapitalize={autoCapitalize ?? 'words'}
+          selectTextOnFocus={false}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
         />

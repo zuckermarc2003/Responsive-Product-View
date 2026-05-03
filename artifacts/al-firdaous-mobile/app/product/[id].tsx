@@ -8,12 +8,14 @@ import {
   Dimensions,
   FlatList,
   Image,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -46,6 +48,13 @@ export default function ProductDetailScreen() {
   const [imageIndex, setImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
   const [showFullDesc, setShowFullDesc] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewName, setReviewName] = useState('');
+  const [reviewEmail, setReviewEmail] = useState('');
+  const [reviewText, setReviewText] = useState('');
+  const [reviewStars, setReviewStars] = useState(0);
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [localReviews, setLocalReviews] = useState(reviews);
   const cartBtnScale = useSharedValue(1);
   const heartScale = useSharedValue(1);
 
@@ -77,6 +86,31 @@ export default function ProductDetailScreen() {
 
   const cartBtnStyle = useAnimatedStyle(() => ({ transform: [{ scale: cartBtnScale.value }] }));
   const heartStyle = useAnimatedStyle(() => ({ transform: [{ scale: heartScale.value }] }));
+
+  const handleSubmitReview = useCallback(async () => {
+    if (!reviewName.trim() || !reviewEmail.trim() || !reviewText.trim() || reviewStars === 0) {
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs et noter le produit.');
+      return;
+    }
+    setSubmittingReview(true);
+    try {
+      const newReview = {
+        id: `${Date.now()}`,
+        author: reviewName,
+        rating: reviewStars,
+        date: new Date().toLocaleDateString('fr-FR'),
+        comment: reviewText,
+      };
+      setLocalReviews(prev => [newReview, ...prev]);
+      setReviewName('');
+      setReviewEmail('');
+      setReviewText('');
+      setReviewStars(0);
+      setShowReviewModal(false);
+    } finally {
+      setSubmittingReview(false);
+    }
+  }, [reviewName, reviewEmail, reviewText, reviewStars]);
 
   if (loadingProduct) {
     return (
@@ -232,30 +266,30 @@ export default function ProductDetailScreen() {
           </View>
         </View>
 
-        {/* ── Reviews ── */}
-        {reviews.length > 0 && (
-          <View style={styles.reviewsSection}>
-            <View style={styles.reviewsHeader}>
-              <Text style={styles.reviewsTitle}>Avis clients</Text>
-              <View style={styles.overallRating}>
-                <Text style={styles.overallRatingNum}>{product.rating}</Text>
-                <View>
-                  <View style={styles.starsRow}>
-                    {[1, 2, 3, 4, 5].map(s => (
-                      <AppIcon
-                        key={s}
-                        name={s <= Math.floor(product.rating) ? 'star' : 'star-outline'}
-                        size={14}
-                        color={colors.starGold}
-                      />
-                    ))}
-                  </View>
-                  <Text style={styles.reviewCountText}>{reviews.length} avis</Text>
+        {/* ── Reviews Section ── */}
+        <View style={styles.reviewsSection}>
+          <View style={styles.reviewsHeader}>
+            <Text style={styles.reviewsTitle}>Avis clients</Text>
+            <View style={styles.overallRating}>
+              <Text style={styles.overallRatingNum}>{product.rating}</Text>
+              <View>
+                <View style={styles.starsRow}>
+                  {[1, 2, 3, 4, 5].map(s => (
+                    <AppIcon
+                      key={s}
+                      name={s <= Math.floor(product.rating) ? 'star' : 'star-outline'}
+                      size={14}
+                      color={colors.starGold}
+                    />
+                  ))}
                 </View>
+                <Text style={styles.reviewCountText}>{localReviews.length} avis</Text>
               </View>
             </View>
+          </View>
 
-            {reviews.map(review => (
+          {localReviews.length > 0 ? (
+            localReviews.map(review => (
               <View key={review.id} style={styles.reviewCard}>
                 <View style={styles.reviewHeader}>
                   <View style={styles.reviewAvatar}>
@@ -273,9 +307,94 @@ export default function ProductDetailScreen() {
                 </View>
                 <Text style={styles.reviewText}>{review.comment}</Text>
               </View>
-            ))}
+            ))
+          ) : (
+            <Text style={[styles.reviewCountText, { textAlign: 'center', marginVertical: 16 }]}>Aucun avis pour le moment</Text>
+          )}
+
+          <Pressable
+            style={[styles.addReviewBtn, { backgroundColor: colors.primary }]}
+            onPress={() => setShowReviewModal(true)}
+          >
+            <AppIcon name="pencil-outline" size={16} color="#fff" />
+            <Text style={styles.addReviewBtnText}>Ajouter un avis</Text>
+          </Pressable>
+        </View>
+
+        {/* ── Review Modal ── */}
+        <Modal visible={showReviewModal} transparent animationType="slide" onRequestClose={() => setShowReviewModal(false)}>
+          <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.6)' }]}>
+            <View style={[styles.reviewFormContainer, { backgroundColor: colors.card }]}>
+              <View style={styles.modalHeader}>
+                <Text style={[styles.modalTitle, { color: colors.foreground }]}>Donner un avis</Text>
+                <Pressable onPress={() => setShowReviewModal(false)}>
+                  <AppIcon name="close" size={20} color={colors.foreground} />
+                </Pressable>
+              </View>
+
+              <ScrollView style={styles.reviewFormScroll} showsVerticalScrollIndicator={false}>
+                <Text style={[styles.formLabel, { color: colors.foreground }]}>Nom</Text>
+                <TextInput
+                  style={[styles.formInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
+                  placeholder="Votre nom"
+                  placeholderTextColor={colors.mutedForeground}
+                  value={reviewName}
+                  onChangeText={setReviewName}
+                  selectTextOnFocus={false}
+                />
+
+                <Text style={[styles.formLabel, { color: colors.foreground }]}>Email</Text>
+                <TextInput
+                  style={[styles.formInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
+                  placeholder="votre@email.com"
+                  placeholderTextColor={colors.mutedForeground}
+                  value={reviewEmail}
+                  onChangeText={setReviewEmail}
+                  keyboardType="email-address"
+                  selectTextOnFocus={false}
+                />
+
+                <Text style={[styles.formLabel, { color: colors.foreground }]}>Note</Text>
+                <View style={styles.starsInput}>
+                  {[1, 2, 3, 4, 5].map(s => (
+                    <Pressable key={s} onPress={() => setReviewStars(s)}>
+                      <AppIcon
+                        name={s <= reviewStars ? 'star' : 'star-outline'}
+                        size={32}
+                        color={s <= reviewStars ? colors.starGold : colors.border}
+                      />
+                    </Pressable>
+                  ))}
+                </View>
+
+                <Text style={[styles.formLabel, { color: colors.foreground }]}>Votre avis</Text>
+                <TextInput
+                  style={[styles.formTextarea, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
+                  placeholder="Partagez votre expérience..."
+                  placeholderTextColor={colors.mutedForeground}
+                  value={reviewText}
+                  onChangeText={setReviewText}
+                  multiline
+                  numberOfLines={4}
+                  selectTextOnFocus={false}
+                />
+
+                <View style={styles.formActions}>
+                  <Pressable
+                    style={[styles.submitBtn, { backgroundColor: colors.primary, opacity: submittingReview ? 0.6 : 1 }]}
+                    onPress={handleSubmitReview}
+                    disabled={submittingReview}
+                  >
+                    <Text style={styles.submitBtnText}>{submittingReview ? 'Envoi...' : 'Envoyer'}</Text>
+                  </Pressable>
+                  <Pressable style={[styles.cancelBtn, { borderColor: colors.border }]} onPress={() => setShowReviewModal(false)}>
+                    <Text style={[styles.cancelBtnText, { color: colors.foreground }]}>Annuler</Text>
+                  </Pressable>
+                </View>
+              </ScrollView>
+            </View>
           </View>
-        )}
+        </Modal>
 
         {/* ── Related Products ── */}
         {(loadingRelated || related.length > 0) && (
@@ -403,6 +522,34 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number, bottom
     reviewAuthor: { fontSize: 14, fontFamily: 'Inter_700Bold', color: colors.foreground },
     reviewDate: { fontSize: 11, fontFamily: 'Inter_400Regular', color: colors.mutedForeground },
     reviewText: { fontSize: 13, fontFamily: 'Inter_400Regular', color: colors.mutedForeground, lineHeight: 20 },
+    addReviewBtn: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+      marginTop: 16, paddingVertical: 14, borderRadius: 12,
+    },
+    addReviewBtnText: { color: '#fff', fontSize: 14, fontFamily: 'Inter_700Bold' },
+    modalOverlay: { flex: 1, justifyContent: 'flex-end' },
+    reviewFormContainer: {
+      borderTopLeftRadius: 20, borderTopRightRadius: 20,
+      paddingHorizontal: 16, paddingBottom: 24, maxHeight: '85%',
+    },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
+    modalTitle: { fontSize: 18, fontFamily: 'Inter_700Bold' },
+    reviewFormScroll: { marginVertical: 16 },
+    formLabel: { fontSize: 13, fontFamily: 'Inter_700Bold', marginBottom: 8, marginTop: 12 },
+    formInput: {
+      borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12,
+      fontFamily: 'Inter_400Regular', fontSize: 14,
+    },
+    formTextarea: {
+      borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12,
+      fontFamily: 'Inter_400Regular', fontSize: 14, textAlignVertical: 'top',
+    },
+    starsInput: { flexDirection: 'row', gap: 12, marginBottom: 16 },
+    formActions: { flexDirection: 'row', gap: 10, marginTop: 20, marginBottom: bottomPad + 16 },
+    submitBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+    submitBtnText: { color: '#fff', fontSize: 14, fontFamily: 'Inter_700Bold' },
+    cancelBtn: { flex: 1, borderWidth: 1.5, borderRadius: 12, alignItems: 'center', justifyContent: 'center', paddingVertical: 14 },
+    cancelBtnText: { fontSize: 14, fontFamily: 'Inter_700Bold' },
     relatedSection: { marginBottom: 16 },
     relatedTitle: { fontSize: 18, fontFamily: 'Inter_700Bold', color: colors.foreground, paddingHorizontal: 16, marginBottom: 12 },
     cta: {
