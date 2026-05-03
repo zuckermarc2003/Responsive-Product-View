@@ -217,6 +217,81 @@ const pickerS = StyleSheet.create({
   cityText: { fontSize: 15, fontFamily: 'Inter_500Medium' },
 });
 
+// ── Step 1 Form (memoized to prevent re-renders) ──────────────────────────────
+const Step1Form = React.memo(({
+  form, errors, setFirstName, setLastName, setEmail, setPhone, setCity, setAddress, colors,
+}: any) => (
+  <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View style={styles.cardHeader}>
+      <Text style={styles.cardStep}>ÉTAPE 1 / 2</Text>
+      <Text style={styles.cardTitle}>Informations de livraison</Text>
+    </View>
+    <View style={styles.cardBody}>
+      <View style={styles.row}>
+        <View style={{ flex: 1 }}>
+          <Field
+            label="Prénom"
+            icon="person-outline"
+            value={form.firstName}
+            onChangeText={setFirstName}
+            placeholder="Mohamed"
+            error={errors.firstName}
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Field
+            label="Nom"
+            icon="person-outline"
+            value={form.lastName}
+            onChangeText={setLastName}
+            placeholder="Alami"
+            error={errors.lastName}
+          />
+        </View>
+      </View>
+
+      <Field
+        label="Email (optionnel)"
+        icon="mail-outline"
+        value={form.email}
+        onChangeText={setEmail}
+        placeholder="email@exemple.com"
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
+
+      <Field
+        label="Téléphone"
+        icon="call-outline"
+        value={form.phone}
+        onChangeText={setPhone}
+        placeholder="+212 6XX XXX XXX"
+        keyboardType="phone-pad"
+        autoCapitalize="none"
+        error={errors.phone}
+      />
+
+      <CityPicker
+        value={form.city}
+        onSelect={setCity}
+        colors={colors}
+      />
+      {errors.city && (
+        <Text style={fieldS.error}>{errors.city}</Text>
+      )}
+
+      <Field
+        label="Adresse complète"
+        icon="home-outline"
+        value={form.address}
+        onChangeText={setAddress}
+        placeholder="Rue, quartier, numéro..."
+        error={errors.address}
+      />
+    </View>
+  </View>
+));
+
 // ── Main component ────────────────────────────────────────────────────────────
 export default function CheckoutScreen() {
   const colors = useColors();
@@ -235,12 +310,12 @@ export default function CheckoutScreen() {
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const bottomPad = Platform.OS === 'web' ? 34 : insets.bottom;
 
-  const setField = useCallback((key: keyof FormData, val: string) => {
-    setForm(f => ({ ...f, [key]: val }));
-    if (errors[key as keyof FieldErrors]) {
-      setErrors(e => ({ ...e, [key]: undefined }));
-    }
-  }, [errors]);
+  const setFirstName = useCallback((v: string) => setForm(f => ({ ...f, firstName: v })), []);
+  const setLastName = useCallback((v: string) => setForm(f => ({ ...f, lastName: v })), []);
+  const setEmail = useCallback((v: string) => setForm(f => ({ ...f, email: v })), []);
+  const setPhone = useCallback((v: string) => setForm(f => ({ ...f, phone: v })), []);
+  const setAddress = useCallback((v: string) => setForm(f => ({ ...f, address: v })), []);
+  const setCity = useCallback((v: string) => setForm(f => ({ ...f, city: v })), []);
 
   function validateStep1(): boolean {
     const e: FieldErrors = {};
@@ -402,75 +477,17 @@ export default function CheckoutScreen() {
 
           {step === 1 ? (
             /* ── STEP 1: Delivery form ── */
-            <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardStep}>ÉTAPE 1 / 2</Text>
-                <Text style={styles.cardTitle}>Informations de livraison</Text>
-              </View>
-              <View style={styles.cardBody}>
-                <View style={styles.row}>
-                  <View style={{ flex: 1 }}>
-                    <Field
-                      label="Prénom"
-                      icon="person-outline"
-                      value={form.firstName}
-                      onChangeText={v => setField('firstName', v)}
-                      placeholder="Mohamed"
-                      error={errors.firstName}
-                    />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Field
-                      label="Nom"
-                      icon="person-outline"
-                      value={form.lastName}
-                      onChangeText={v => setField('lastName', v)}
-                      placeholder="Alami"
-                      error={errors.lastName}
-                    />
-                  </View>
-                </View>
-
-                <Field
-                  label="Email (optionnel)"
-                  icon="mail-outline"
-                  value={form.email}
-                  onChangeText={v => setField('email', v)}
-                  placeholder="email@exemple.com"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-
-                <Field
-                  label="Téléphone"
-                  icon="call-outline"
-                  value={form.phone}
-                  onChangeText={v => setField('phone', v)}
-                  placeholder="+212 6XX XXX XXX"
-                  keyboardType="phone-pad"
-                  autoCapitalize="none"
-                  error={errors.phone}
-                />
-
-                <CityPicker
-                  value={form.city}
-                  onSelect={v => { setField('city', v); }}
-                  colors={colors}
-                />
-                {errors.city && (
-                  <Text style={fieldS.error}>{errors.city}</Text>
-                )}
-
-                <Field
-                  label="Adresse complète"
-                  icon="home-outline"
-                  value={form.address}
-                  onChangeText={v => setField('address', v)}
-                  placeholder="Rue, quartier, numéro..."
-                  error={errors.address}
-                />
-              </View>
-            </View>
+            <Step1Form
+              form={form}
+              errors={errors}
+              setFirstName={setFirstName}
+              setLastName={setLastName}
+              setEmail={setEmail}
+              setPhone={setPhone}
+              setCity={setCity}
+              setAddress={setAddress}
+              colors={colors}
+            />
           ) : (
             /* ── STEP 2: Payment + summary ── */
             <>
