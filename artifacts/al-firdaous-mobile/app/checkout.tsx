@@ -1,7 +1,7 @@
 import { AppIcon } from '@/components/AppIcon';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   Alert,
   Image,
@@ -78,13 +78,13 @@ const stepDotS = StyleSheet.create({
 });
 
 // ── Form field ─────────────────────────────────────────────────────────────────
-function Field({
+const Field = React.memo(({
   label, icon, value, onChangeText, placeholder, keyboardType, error,
   autoCapitalize,
 }: {
   label: string; icon: string; value: string; onChangeText: (v: string) => void;
   placeholder?: string; keyboardType?: any; error?: string; autoCapitalize?: any;
-}) {
+}) => {
   const colors = useColors();
   const [focused, setFocused] = useState(false);
   return (
@@ -112,7 +112,7 @@ function Field({
       {!!error && <Text style={fieldS.error}>{error}</Text>}
     </View>
   );
-}
+});
 const fieldS = StyleSheet.create({
   wrap: { gap: 5 },
   label: { fontSize: 11, fontFamily: 'Inter_700Bold', letterSpacing: 0.8, textTransform: 'uppercase' },
@@ -235,12 +235,12 @@ export default function CheckoutScreen() {
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const bottomPad = Platform.OS === 'web' ? 34 : insets.bottom;
 
-  function setField(key: keyof FormData, val: string) {
+  const setField = useCallback((key: keyof FormData, val: string) => {
     setForm(f => ({ ...f, [key]: val }));
     if (errors[key as keyof FieldErrors]) {
       setErrors(e => ({ ...e, [key]: undefined }));
     }
-  }
+  }, [errors]);
 
   function validateStep1(): boolean {
     const e: FieldErrors = {};
