@@ -30,7 +30,7 @@ import { SkeletonCard } from '@/components/SkeletonCard';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useColors } from '@/hooks/useColors';
-import { useProduct, useRelated, useReviews, useAddReview } from '@/hooks/useProducts';
+import { useProduct, useRelated, useAddReview } from '@/hooks/useProducts';
 import { getFinalPrice } from '@/constants/data';
 import { Review } from '@/types';
 
@@ -43,9 +43,10 @@ export default function ProductDetailScreen() {
   const { addToCart } = useCart();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
 
-  const { data: product, isLoading: loadingProduct } = useProduct(id ?? '');
+  const { data: productData, isLoading: loadingProduct } = useProduct(id ?? '');
+  const product = productData?.product ?? null;
+  const serverReviews = productData?.reviews ?? [];
   const { data: related = [], isLoading: loadingRelated } = useRelated(id ?? '');
-  const { data: serverReviews = [] } = useReviews(id ?? '');
   const addReviewMutation = useAddReview(id ?? '');
 
   const [imageIndex, setImageIndex] = useState(0);
@@ -133,8 +134,7 @@ export default function ProductDetailScreen() {
         email: reviewEmail.trim(),
         review: reviewText.trim(),
         stars: reviewStars,
-        product: Number(id),
-        date: new Date().toISOString(),
+        product_id: Number(id),
       });
     } catch {
       // Already shown optimistically — server will sync on next load
@@ -339,7 +339,7 @@ export default function ProductDetailScreen() {
             ))
           ) : (
             <View style={styles.noReviews}>
-              <AppIcon name="chatbubble-outline" size={36} color={colors.border} />
+              <AppIcon name="document-text-outline" size={36} color={colors.border} />
               <Text style={[styles.noReviewsText, { color: colors.mutedForeground }]}>
                 Soyez le premier à laisser un avis
               </Text>
@@ -350,7 +350,7 @@ export default function ProductDetailScreen() {
             style={[styles.addReviewBtn, { backgroundColor: colors.primary }]}
             onPress={() => setShowReviewModal(true)}
           >
-            <AppIcon name="pencil-outline" size={16} color="#fff" />
+            <AppIcon name="document-text-outline" size={16} color="#fff" />
             <Text style={styles.addReviewBtnText}>Laisser un avis</Text>
           </Pressable>
         </View>

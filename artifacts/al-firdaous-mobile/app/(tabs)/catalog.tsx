@@ -220,6 +220,7 @@ const makeStyles = (colors: ReturnType<typeof useColors>, topPad: number) =>
       flexDirection: 'row', alignItems: 'center', gap: 5,
       paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20,
       backgroundColor: colors.card, borderWidth: 1.5, borderColor: colors.border,
+      maxWidth: '30%',
     },
     catPillActive: { backgroundColor: colors.primary, borderColor: colors.primary },
     catPillText: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: colors.mutedForeground },

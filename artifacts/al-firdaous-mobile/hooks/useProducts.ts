@@ -54,22 +54,13 @@ export function useRelated(productId: string) {
   });
 }
 
-export function useReviews(productId: string) {
-  return useQuery({
-    queryKey: ["reviews", productId],
-    queryFn: () => fetchReviews(productId),
-    enabled: !!productId,
-    staleTime: 1000 * 60 * 2,
-  });
-}
-
 export function useAddReview(productId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: AddReviewPayload) => submitReview(payload),
     onSuccess: () => {
-      // Invalidate reviews cache so the new review appears immediately
-      queryClient.invalidateQueries({ queryKey: ["reviews", productId] });
+      // Invalidate product cache (which includes reviews) so the new review appears immediately
+      queryClient.invalidateQueries({ queryKey: ["product", productId] });
     },
   });
 }

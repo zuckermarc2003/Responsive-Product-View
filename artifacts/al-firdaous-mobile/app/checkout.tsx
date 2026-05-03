@@ -158,7 +158,7 @@ function CityPicker({
           onPress={() => setOpen(true)}
         >
           <AppIcon name="location-outline" size={17} color={colors.mutedForeground} />
-          <Text style={[pickerS.val, { color: value ? colors.foreground : colors.mutedForeground }]}>
+          <Text style={[pickerS.val, { color: value ? colors.foreground : colors.mutedForeground }]} numberOfLines={1}>
             {value || 'Sélectionner une ville...'}
           </Text>
           <AppIcon name="chevron-down" size={16} color={colors.mutedForeground} />
@@ -479,7 +479,7 @@ export default function CheckoutScreen() {
 
           <Pressable
             style={[styles.confirmBtn, { backgroundColor: colors.primary }]}
-            onPress={() => router.replace('/(tabs)/')}
+            onPress={() => router.replace('/(tabs)' as any)}
           >
             <AppIcon name="home-outline" size={18} color="#fff" />
             <Text style={styles.confirmBtnText}>Retour à l'accueil</Text>
@@ -545,7 +545,7 @@ export default function CheckoutScreen() {
                     <Text style={styles.cardTitle}>Livraison</Text>
                   </View>
                   <Pressable style={styles.editBtn} onPress={() => setStep(1)}>
-                    <AppIcon name="create-outline" size={15} color="#fff" />
+                    <AppIcon name="share-outline" size={15} color="#fff" />
                     <Text style={styles.editBtnText}>Modifier</Text>
                   </Pressable>
                 </View>
@@ -585,7 +585,7 @@ export default function CheckoutScreen() {
                       { backgroundColor: colors.secondary },
                       paymentMethod === 'cod' && { backgroundColor: 'rgba(79,172,255,0.12)' },
                     ]}>
-                      <AppIcon name="cash-outline" size={26} color={paymentMethod === 'cod' ? '#4facff' : colors.mutedForeground} />
+                      <AppIcon name="bag-outline" size={26} color={paymentMethod === 'cod' ? '#4facff' : colors.mutedForeground} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.payMethodTitle, { color: colors.foreground }]}>
@@ -606,7 +606,7 @@ export default function CheckoutScreen() {
 
                   <View style={[styles.payMethod, styles.payMethodDisabled, { borderColor: colors.border }]}>
                     <View style={[styles.payIconWrap, { backgroundColor: colors.secondary }]}>
-                      <AppIcon name="card-outline" size={26} color={colors.border} />
+                      <AppIcon name="bag-check-outline" size={26} color={colors.border} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.payMethodTitle, { color: colors.border }]}>

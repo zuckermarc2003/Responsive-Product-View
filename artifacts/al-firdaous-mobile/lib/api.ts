@@ -182,15 +182,26 @@ export async function fetchProducts(filters: ProductFilters = {}): Promise<Produ
   }
 }
 
-export async function fetchProduct(id: string): Promise<Product | null> {
-  if (!BASE_URL) return PRODUCTS.find((p) => p.id === id) ?? null;
+interface ProductDetailResponse {
+  product?: ApiProduct;
+  reviews?: ApiReview[];
+}
+
+export async function fetchProduct(id: string): Promise<{ product: Product | null; reviews: Review[] }> {
+  if (!BASE_URL) {
+    const p = PRODUCTS.find((p) => p.id === id);
+    return { product: p ?? null, reviews: [] };
+  }
   try {
-    const all = await getAllProductsRaw();
-    const raw = all.find((p) => String(p.id) === id);
-    return raw ? normalizeProduct(raw) : null;
+    // Web endpoint: api/product/search/get returns { product, reviews, products }
+    const res = await httpGet<ProductDetailResponse>(`/api/product/search/get?id=${id}`);
+    const product = res.product ? normalizeProduct(res.product) : null;
+    const reviews = (res.reviews ?? []).map(normalizeReview);
+    return { product, reviews };
   } catch (e) {
-    console.warn("[api] fetchProduct failed, using mock data:", e);
-    return PRODUCTS.find((p) => p.id === id) ?? null;
+    console.warn("[api] fetchProduct failed:", e);
+    const p = PRODUCTS.find((p) => p.id === id);
+    return { product: p ?? null, reviews: [] };
   }
 }
 

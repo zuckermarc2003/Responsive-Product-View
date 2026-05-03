@@ -84,7 +84,8 @@ export interface Review {
 }
 
 export interface AddReviewPayload {
-  product_id: number;
+  product?: number;
+  product_id?: number;
   name: string;
   email: string;
   review: string;
